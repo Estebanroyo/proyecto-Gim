@@ -11,3 +11,13 @@ El mismo componente se usa durante la sesión y al consultar una sesión finaliz
 La compilación y revisión estática no equivalen a probar gestos en un teléfono real. No se ejecutan tests ni automatización de navegador, según la instrucción vigente.
 
 Referencias técnicas: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action y https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/overscroll-behavior.
+
+## Transición v0.11.1
+
+Referencia de comportamiento: opciones oficiales de Embla (https://www.embla-carousel.com/docs/api/options), con ajuste a posiciones, avance de una ficha y sin desplazamiento libre. También se consultaron las páginas oficiales de carrusel y movimiento de Material 3; las pautas del carrusel requieren JavaScript para leer su contenido completo en esa web.
+
+La ficha actual y las vistas previas vecinas se desplazan juntas. Se muestran nombre, imagen, objetivo y series guardadas reales de la ficha vecina; las vistas previas son de consulta, sin controles activos ni guardado. Al completar el movimiento, se activa su formulario habitual. No se montan formularios editables duplicados.
+
+El arrastre sigue el dedo sin transición. Al soltar o pulsar anterior/siguiente, se completa el recorrido en 260 ms con desaceleración `cubic-bezier(0.22, 1, 0.36, 1)`. El ejercicio seleccionado cambia al terminar la animación, no antes. Si el gesto no alcanza el umbral, el mismo movimiento devuelve la ficha al centro. Cancelación, desmontaje y cambio externo de ejercicio limpian el gesto y sus temporizadores; un respaldo de 320 ms evita depender exclusivamente de transitionend.
+
+Se anima un único transform y se indica will-change solo durante el arrastre o ajuste. Sin nuevas dependencias, autoplay ni efectos globales. La preferencia de movimiento reducido utiliza cambio directo. No se midieron cuadros por segundo ni se verificó el gesto en navegador por la instrucción de no realizar tests.

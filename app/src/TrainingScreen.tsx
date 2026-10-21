@@ -39,12 +39,20 @@ export default function TrainingScreen(p: Props) {
     const destino = sesion.ejercicios[indice + direccion];
     if (destino && !p.editando) p.onEjercicio(destino.id);
   }
-  const navegacion = <nav className="exercise-navigation" aria-label="Recorrer ejercicios">
+  const navegacion = (navegar: (direccion: -1 | 1) => void) => <nav className="exercise-navigation" aria-label="Recorrer ejercicios">
     <button type="button" className="button secondary small" disabled={p.editando || indice <= 0} onClick={() => navegar(-1)}><Icon nombre="arrow-left" /> Anterior</button>
     <span aria-live="polite">{indice + 1} / {sesion.ejercicios.length}</span>
     <button type="button" className="button secondary small" disabled={p.editando || indice >= sesion.ejercicios.length - 1} onClick={() => navegar(1)}>Siguiente <Icon nombre="arrow-right" /></button>
   </nav>;
-  const gesto = { ejercicioId: ejercicio.id, disabled: p.editando, anterior: indice > 0, siguiente: indice < sesion.ejercicios.length - 1, onNavegar: navegar };
+  function vistaPrevia(posicion: number) {
+    const item = sesion.ejercicios[posicion];
+    if (!item) return null;
+    const realizadas = sesion.series.filter(s => s.ejercicioId === item.id);
+    return <><div className="exercise-identity"><div><div className="focus-heading"><span className="tag">{item.grupo}</span><span>{posicion + 1} de {sesion.ejercicios.length}</span></div><h3>{item.nombre}</h3></div><figure><ExerciseVisual ejercicio={item} /><figcaption>{tieneReferenciaVisual(item.nombre) ? 'Referencia' : 'Sin imagen'}</figcaption></figure></div>
+      <div className="exercise-preview-summary"><strong>{item.seriesObjetivo ? `${item.seriesObjetivo} series${item.repeticionesObjetivo ? ` × ${item.repeticionesObjetivo} reps` : ''}` : 'A tu ritmo'}</strong><p className="muted">{realizadas.length} series guardadas</p></div>
+      <ExerciseSets ejercicio={item} series={realizadas} peso="" repeticiones="" disabled registrando={false} onPeso={() => {}} onRepeticiones={() => {}} /></>;
+  }
+  const gesto = { ejercicioId: ejercicio.id, disabled: p.editando, anterior: indice > 0, siguiente: indice < sesion.ejercicios.length - 1, onNavegar: navegar, vistaAnterior: vistaPrevia(indice - 1), vistaSiguiente: vistaPrevia(indice + 1) };
   const siguiente = siguienteEjercicio(sesion, ejercicio.id);
   const ultimo = series.at(-1);
   const inactivo = p.bloqueado || p.editando || Boolean(sesion.finalizadaEn);
@@ -60,9 +68,9 @@ export default function TrainingScreen(p: Props) {
       {pendientes > 0 && <p className="muted">El registro conserva también los objetivos que quedaron pendientes.</p>}
       <button type="button" className="button primary" onClick={p.onNuevo} disabled={p.editando}>Elegir próximo entrenamiento <Icon nombre="arrow-right" /></button>
       <details className="quiet-details"><summary>Revisar o continuar esta sesión</summary><button className="button secondary" type="button" disabled={p.bloqueado || p.editando} onClick={p.onReabrir}>Continuar agregando series</button><p className="muted">Para corregir una serie, usá el registro que aparece debajo.</p></details>
-    </section> : <SwipeExerciseCard {...gesto}>
+    </section> : <SwipeExerciseCard {...gesto}>{animar => <>
       {identidad}
-      {navegacion}
+      {navegacion(animar)}
       <div className="set-progress"><strong>{etiquetaSerie}</strong><span>{ejercicio.repeticionesObjetivo ? `Objetivo: ${ejercicio.repeticionesObjetivo} reps` : 'A tu ritmo'}</span></div>
       {ejercicio.notas && <p className="exercise-notes">{ejercicio.notas}</p>}
       <form onSubmit={evento => { evento.preventDefault(); p.onRegistrar(); }}>
@@ -73,9 +81,9 @@ export default function TrainingScreen(p: Props) {
         <p className="inline-feedback" role="status" aria-live="polite" aria-atomic="true">{p.mensaje || 'Se guarda al confirmar, también sin conexión.'}</p>
       </form>
       <div className="next-exercise"><span>Después de este ejercicio</span><strong>{siguiente?.nombre ?? 'Fin del entrenamiento'}</strong></div>
-    </SwipeExerciseCard>}
+    </>}</SwipeExerciseCard>}
 
-    {(sesion.finalizadaEn || sesion.fecha === null) && <SwipeExerciseCard {...gesto} className="reviewed-exercise">{identidad}{navegacion}<p className="muted">{series.length ? `${series.length} series guardadas${ejercicio.seriesObjetivo ? ` · objetivo: ${ejercicio.seriesObjetivo} series` : ''}` : 'Sin series registradas en este ejercicio'}</p><ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} /></SwipeExerciseCard>}
+    {(sesion.finalizadaEn || sesion.fecha === null) && <SwipeExerciseCard {...gesto} className="reviewed-exercise">{animar => <>{identidad}{navegacion(animar)}<p className="muted">{series.length ? `${series.length} series guardadas${ejercicio.seriesObjetivo ? ` · objetivo: ${ejercicio.seriesObjetivo} series` : ''}` : 'Sin series registradas en este ejercicio'}</p><ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} /></>}</SwipeExerciseCard>}
 
     </div><aside className="training-sidebar">
     <div className="session-progress"><span>{conObjetivo ? `${completados} de ${conObjetivo} ejercicios completados` : `${cantidades.size} ejercicios registrados`}</span><span>{sesion.series.length} series</span>{conObjetivo > 0 && <progress value={completados} max={conObjetivo} aria-label="Ejercicios completados" />}</div>

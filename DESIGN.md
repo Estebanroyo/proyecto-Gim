@@ -41,3 +41,5 @@ Fuente e ilustraciones son locales y están incluidas en el precaché PWA. Sin l
 Esta dirección está implementada en código. No se verificó renderizado ni uso en navegador, por la instrucción vigente de no ejecutar tests ni automatización de navegador.
 
 En v0.11, la ficha de ejercicio incorpora Anterior/Siguiente y desplazamiento lateral con umbral del 25 % o gesto rápido, también al revisar resultados. El desplazamiento vertical y el zoom quedan a cargo del navegador. En móvil, la tabla utiliza su altura natural y no captura un scroll interno; los botones y campos conservan sus gestos habituales. La ficha siempre vuelve a una posición completa.
+
+v0.11.1 da continuidad al gesto mediante una pista con vistas previas laterales y ajuste de 260 ms con desaceleración. Arrastre directo, sin transición durante el movimiento; la selección cambia al terminar el ajuste. Misma transición para botones. Sin autoplay ni dependencias adicionales. Referencia oficial: https://www.embla-carousel.com/docs/api/options.
