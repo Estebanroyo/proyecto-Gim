@@ -11,6 +11,7 @@ function copiarSesion(sesion: Sesion): Sesion {
     ejercicios: sesion.ejercicios.map(ejercicio => ({
       id: ejercicio.id, nombre: ejercicio.nombre, grupo: ejercicio.grupo,
       seriesObjetivo: ejercicio.seriesObjetivo, repeticionesObjetivo: ejercicio.repeticionesObjetivo, notas: ejercicio.notas,
+      ...(ejercicio.criterioPeso ? { criterioPeso: ejercicio.criterioPeso } : {}),
     })),
     series: sesion.series.map(serie => ({ id: serie.id, pesoKg: serie.pesoKg, repeticiones: serie.repeticiones, ejercicioId: serie.ejercicioId, ...(serie.registradaEn ? { registradaEn: serie.registradaEn } : {}) })),
   };
@@ -22,7 +23,7 @@ function copiaValidada(registro: RegistroActual): RegistroActual {
 }
 
 function copiarRutina(rutina: RutinaDia): RutinaDia {
-  return { id: rutina.id, titulo: rutina.titulo, ejercicios: rutina.ejercicios.map(e => ({ id: e.id, nombre: e.nombre, grupo: e.grupo, seriesObjetivo: e.seriesObjetivo, repeticionesObjetivo: e.repeticionesObjetivo, notas: e.notas })) };
+  return { id: rutina.id, titulo: rutina.titulo, ejercicios: rutina.ejercicios.map(e => ({ id: e.id, nombre: e.nombre, grupo: e.grupo, seriesObjetivo: e.seriesObjetivo, repeticionesObjetivo: e.repeticionesObjetivo, notas: e.notas, ...(e.criterioPeso ? { criterioPeso: e.criterioPeso } : {}) })) };
 }
 
 export function crearRespaldo(registro: RegistroActual, exportadoEn = new Date().toISOString()): string {

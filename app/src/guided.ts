@@ -1,5 +1,6 @@
 import { validarRutinas } from './training.ts';
 import type { EjercicioPlan, RegistroActual, RutinaDia, Sesion } from './training';
+import { criterioComparable, mismoEjercicio } from './progress';
 
 export function ejercicioPendiente(sesion: Sesion): EjercicioPlan | undefined {
   return sesion.ejercicios.find(e => e.seriesObjetivo === null || sesion.series.filter(s => s.ejercicioId === e.id).length < e.seriesObjetivo);
@@ -19,6 +20,8 @@ export function sugerirPeso(registro: RegistroActual, sesion: Sesion, ejercicioI
     (s.rutinaOrigen?.id ?? null) === (sesion.rutinaOrigen?.id ?? null))
     .sort((a, b) => b.fecha!.localeCompare(a.fecha!));
   for (const anterior of anteriores) {
+    const ejercicio = sesion.ejercicios.find(e => e.id === ejercicioId);
+    if (!ejercicio || !mismoEjercicio(anterior, sesion, ejercicio) || (ejercicio.criterioPeso && !criterioComparable(anterior, ejercicio))) continue;
     const primera = anterior.series.find(s => s.ejercicioId === ejercicioId);
     if (primera) return { pesoKg: primera.pesoKg, origen: `Primera serie del ${anterior.fecha}` };
   }

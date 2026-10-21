@@ -10,6 +10,7 @@ export type EjercicioPlan = {
   seriesObjetivo: number | null;
   repeticionesObjetivo: number | null;
   notas: string | null;
+  criterioPeso?: 'total' | 'por-mancuerna' | 'lastre';
 };
 
 export type RutinaDia = {
@@ -56,6 +57,7 @@ function validarEjercicios(dato: unknown): asserts dato is EjercicioPlan[] {
     if (!esObjeto(ejercicio) || !textoValido(ejercicio.id, 100) || ids.has(ejercicio.id) ||
       !textoValido(ejercicio.nombre, 200) || !textoValido(ejercicio.grupo, 100) ||
       !esObjetivo(ejercicio.seriesObjetivo) || !esObjetivo(ejercicio.repeticionesObjetivo) ||
+      (ejercicio.criterioPeso !== undefined && !['total', 'por-mancuerna', 'lastre'].includes(ejercicio.criterioPeso as string)) ||
       ((ejercicio.seriesObjetivo === null) !== (ejercicio.repeticionesObjetivo === null)) ||
       !(ejercicio.notas === null || (typeof ejercicio.notas === 'string' && ejercicio.notas.length <= 500))) {
       throw new Error('El entrenamiento contiene un ejercicio inválido.');
@@ -138,7 +140,7 @@ export function crearSesion(registro: RegistroActual, id: string, fecha: string,
   const sesion: Sesion = {
     id, fecha, nombre: titulo,
     rutinaOrigen: dia ? { id: dia.id, titulo: dia.titulo } : null,
-    ejercicios: dia ? dia.ejercicios.map(ejercicio => ({ ...ejercicio })) : [ejercicioInicial()],
+    ejercicios: dia ? dia.ejercicios.map(ejercicio => ({ ...ejercicio })) : [{ ...ejercicioInicial(), criterioPeso: 'total' }],
     series: [],
   };
   return { ...registro, entrenamientos: [sesion, ...registro.entrenamientos] };

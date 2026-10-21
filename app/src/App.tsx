@@ -13,6 +13,8 @@ import { fechaLocal, mostrarFecha, validarSerie } from './workout';
 import { corregirSerie, crearSesion, registrarSerie, sesionesPorFecha } from './training';
 import type { EjercicioPlan, RegistroActual } from './training';
 import { diasRutina } from './rutina';
+import { completarCriterios, etiquetaPeso } from './weight';
+import { escribirBorrador, leerBorrador, quitarBorrador } from './draft';
 import { claveNavegacion, ejercicioPendiente, finalizarSesion, guardarRutina, reabrirSesion, recuperarNavegacion, reiniciarSesion, siguienteEjercicio, sugerirPeso, sumarPeso } from './guided';
 
 export default function App() {
@@ -24,15 +26,27 @@ export default function App() {
   });
   const [seleccionado, setSeleccionado] = useState(inicio.sesionId);
   const [ejercicioId, setEjercicioId] = useState(inicio.ejercicioId);
-  const rutinas = registro.rutinas ?? diasRutina;
+  const rutinas = useMemo(() => completarCriterios(registro.rutinas ?? diasRutina), [registro.rutinas]);
+  const [borradorInicial] = useState(() => {
+    const s = registro.entrenamientos.find(s => s.id === inicio.sesionId);
+    const e = s?.ejercicios.find(e => e.id === inicio.ejercicioId);
+    return s && e ? leerBorrador(s, e) : { borrador: null, aviso: '' };
+  });
+  const [hayBorrador, setHayBorrador] = useState(Boolean(borradorInicial.borrador));
+  const [avisoBorrador, setAvisoBorrador] = useState(borradorInicial.aviso);
+  const [reinicioPendiente, setReinicioPendiente] = useState(false);
   const [diaId, setDiaId] = useState(rutinas[0]?.id ?? '');
   const [fecha, setFecha] = useState(fechaLocal);
   const [nombre, setNombre] = useState('Entrenamiento');
   const [peso, setPeso] = useState(() => {
+    if (borradorInicial.borrador) return borradorInicial.borrador.peso;
     const sesion = registro.entrenamientos.find(s => s.id === inicio.sesionId);
     return sesion ? String(sugerirPeso(registro, sesion, inicio.ejercicioId).pesoKg) : '0';
   });
-  const [repeticiones, setRepeticiones] = useState(() => String(registro.entrenamientos.find(s => s.id === inicio.sesionId)?.ejercicios.find(e => e.id === inicio.ejercicioId)?.repeticionesObjetivo ?? 10));
+  const [repeticiones, setRepeticiones] = useState(() => {
+    const sesion = registro.entrenamientos.find(s => s.id === inicio.sesionId);
+    return borradorInicial.borrador?.repeticiones ?? String(sesion?.series.filter(s => s.ejercicioId === inicio.ejercicioId).at(-1)?.repeticiones ?? sesion?.ejercicios.find(e => e.id === inicio.ejercicioId)?.repeticionesObjetivo ?? 10);
+  });
   const [error, setError] = useState(errorCarga);
   const [mensaje, setMensaje] = useState('');
   const [nuevoAbierto, setNuevoAbierto] = useState(!inicio.sesionId);
@@ -104,13 +118,26 @@ export default function App() {
     return resultado;
   }
 
-  function prepararFormulario(item: EjercicioPlan | undefined, sesionId = seleccionado, datos = registro) {
+  function prepararFormulario(item: EjercicioPlan | undefined, sesionId = seleccionado, datos = registro, recuperar = true) {
     setEdicion(null);
     setEjercicioId(item?.id ?? '');
     setCierrePendiente(false);
     const sesion = datos.entrenamientos.find(s => s.id === sesionId);
-    setPeso(item && sesion ? String(sugerirPeso(datos, sesion, item.id).pesoKg) : '0');
-    setRepeticiones(String(item?.repeticionesObjetivo ?? 10));
+    const lectura = item && sesion && recuperar ? leerBorrador(sesion, item) : { borrador: null, aviso: '' };
+    setHayBorrador(Boolean(lectura.borrador));
+    setAvisoBorrador(lectura.aviso);
+    setPeso(lectura.borrador?.peso ?? (item && sesion ? String(sugerirPeso(datos, sesion, item.id).pesoKg) : '0'));
+    setRepeticiones(lectura.borrador?.repeticiones ?? String(sesion?.series.filter(s => s.ejercicioId === item?.id).at(-1)?.repeticiones ?? item?.repeticionesObjetivo ?? 10));
+  }
+
+  function actualizarBorrador(nuevoPeso: string, nuevasReps: string) {
+    if (!puedeRegistrar || !activo || !ejercicio || edicion) return;
+    setPeso(nuevoPeso);
+    setRepeticiones(nuevasReps);
+    const aviso = escribirBorrador(activo, ejercicio, nuevoPeso, nuevasReps);
+    setHayBorrador(!aviso);
+    setAvisoBorrador(aviso);
+    setMensaje('');
   }
 
   function crear(event: FormEvent<HTMLFormElement>) {
@@ -167,6 +194,9 @@ export default function App() {
       const terminado = completo && !ejercicioPendiente(sesion);
       if (terminado) nuevo = finalizarSesion(nuevo, activo.id, ahora);
       if (guardar(nuevo)) {
+        const aviso = quitarBorrador(activo, ejercicio);
+        setHayBorrador(false);
+        setAvisoBorrador(aviso);
         if (siguiente) {
           prepararFormulario(siguiente, activo.id, nuevo);
           setMensaje(`${ejercicio.nombre}: ${series.length + 1} series guardadas. Seguís con ${siguiente.nombre}.`);
@@ -181,6 +211,7 @@ export default function App() {
   }
 
   function elegirSesion(id: string) {
+    setReinicioPendiente(false);
     const sesion = registro.entrenamientos.find(item => item.id === id);
     setSeleccionado(id);
     prepararFormulario(sesion ? ejercicioPendiente(sesion) ?? sesion.ejercicios.at(-1) : undefined, id);
@@ -203,7 +234,7 @@ export default function App() {
   }
 
   function ajustarPeso(incremento: number) {
-    try { setPeso(sumarPeso(peso, incremento)); setError(''); }
+    try { actualizarBorrador(sumarPeso(peso, incremento), repeticiones); setError(''); }
     catch (problema) { setError((problema as Error).message); }
   }
 
@@ -212,7 +243,13 @@ export default function App() {
     try {
       const nuevo = reiniciarSesion(registro, activo.id);
       if (!guardar(nuevo)) return false;
-      prepararFormulario(activo.ejercicios[0], activo.id, nuevo);
+      let aviso = '';
+      for (const item of activo.ejercicios) aviso = quitarBorrador(activo, item) || aviso;
+      prepararFormulario(activo.ejercicios[0], activo.id, nuevo, false);
+      setAvisoBorrador(aviso);
+      setReinicioPendiente(false);
+      setNuevoAbierto(false);
+      cambiarModulo('entrenar');
       setMensaje('Entrenamiento reiniciado. Empezá por la primera serie.');
       requestAnimationFrame(() => formularioSerie.current?.scrollIntoView({ block: 'start' }));
       return true;
@@ -236,7 +273,7 @@ export default function App() {
     if (!puedeEscribir || !activo?.fecha || !ejercicio) return;
     const serie = activo.series.find(item => item.id === serieId);
     if (!serie) return;
-    prepararFormulario(activo.ejercicios.find(e => e.id === serie.ejercicioId));
+    if (ejercicio.id !== serie.ejercicioId) prepararFormulario(activo.ejercicios.find(e => e.id === serie.ejercicioId));
     botonEdicion.current = boton;
     setEdicion({ sesionId: activo.id, ejercicioId: serie.ejercicioId, serieId });
     setPesoEditado(String(serie.pesoKg));
@@ -249,7 +286,7 @@ export default function App() {
     setEdicion(null);
     setError(errorCarga);
     setMensaje('Edición cancelada.');
-    botonEdicion.current?.focus();
+    requestAnimationFrame(() => botonEdicion.current?.focus({ preventScroll: true }));
   }
 
   function guardarCorreccion(event: FormEvent<HTMLFormElement>) {
@@ -265,9 +302,10 @@ export default function App() {
         pesoKg: Number(pesoEditado), repeticiones: Number(repeticionesEditadas),
       });
       if (guardar(nuevo)) {
+        if (hayBorrador) setAvisoBorrador(escribirBorrador(nuevo.entrenamientos.find(s => s.id === activo.id)!, ejercicio, peso, repeticiones));
         setEdicion(null);
         setMensaje('Corrección guardada.');
-        botonEdicion.current?.focus();
+        requestAnimationFrame(() => botonEdicion.current?.focus({ preventScroll: true }));
       }
     } catch (problema) {
       setError(problema instanceof Error ? problema.message : 'No se pudo corregir la serie.');
@@ -276,7 +314,7 @@ export default function App() {
 
   const editorSerie = edicion && activo && ejercicio ? (
     <form className="edit-form" onSubmit={guardarCorreccion} aria-labelledby="titulo-edicion">
-      <h3 id="titulo-edicion">Corregir serie de {ejercicio.nombre}</h3><p className="muted">Guardá o cancelá esta corrección para cambiar de sección.</p>
+      <h3 id="titulo-edicion">Corregir serie {series.findIndex(s => s.id === edicion.serieId) + 1} · {ejercicio.nombre}</h3><p className="muted">{etiquetaPeso(ejercicio)}. Guardá o cancelá esta corrección para seguir entrenando.</p>
       <div className="fields">
         <label>Peso corregido <span>kg</span><input type="number" min="0" max="1000" step="0.01" inputMode="decimal" value={pesoEditado} onChange={e => setPesoEditado(e.target.value)} required autoFocus /></label>
         <label>Repeticiones corregidas<input type="number" min="1" max="100" step="1" inputMode="numeric" value={repeticionesEditadas} onChange={e => setRepeticionesEditadas(e.target.value)} required /></label>
@@ -290,7 +328,7 @@ export default function App() {
     <div className="app-shell">
       <header className="site-header">
         <button className="brand" type="button" aria-label="GIM, volver al entrenamiento" disabled={Boolean(edicion)} onClick={() => cambiarModulo('entrenar')}><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width="32" height="32" />GIM<span>BITÁCORA</span></button>
-        <span className="local-label">Personal · v0.11.1</span>
+        <span className="local-label">Personal · v0.12</span>
       </header>
       <nav className="module-nav" aria-label="Secciones de la aplicación">
         <button type="button" aria-current={modulo === 'entrenar' ? 'page' : undefined} disabled={Boolean(edicion)} onClick={() => cambiarModulo('entrenar')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7v10M2 9v6M19 7v10M22 9v6M5 12h14" /></svg>Entrenar</button>
@@ -298,7 +336,7 @@ export default function App() {
         <button type="button" aria-current={modulo === 'configuracion' ? 'page' : undefined} disabled={Boolean(edicion)} onClick={() => cambiarModulo('configuracion')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6" /></svg>Configuración{(rutinaEnEdicion || actualizacion) && <span className="unsaved-dot" aria-label={actualizacion ? 'Actualización disponible' : 'Borrador de rutina pendiente'} />}</button>
       </nav>
       <main>
-        {cambioExterno && <p className="external-notice" role="status">El registro cambió en otra pestaña. Recargá para continuar con los últimos datos; los cambios sin guardar del formulario no se conservan.</p>}
+        {cambioExterno && <p className="external-notice" role="status">El registro cambió en otra pestaña. Recargá para continuar. Si cambió la base de tu borrador, tendrás que revisar sus valores.</p>}
         {error && !edicion && <p className="feedback error global-error" role="alert">{error}</p>}
         {errorNavegacion && <p className="feedback error" role="status">{errorNavegacion}</p>}
         {actualizacion && modulo !== 'configuracion' && <p className="update-reminder" role="status">Hay una actualización disponible en Configuración.</p>}
@@ -316,11 +354,11 @@ export default function App() {
           </> : <div ref={formularioSerie}>
             <TrainingScreen key={activo.id} sesion={activo} ejercicio={ejercicio} series={series} peso={peso} repeticiones={repeticiones}
               bloqueado={!puedeEscribir || !activo.fecha} editando={Boolean(edicion)} referencia={sugerencia}
-              onPeso={setPeso} onRepeticiones={setRepeticiones} onSumar={ajustarPeso} onRegistrar={registrar}
+              onPeso={valor => actualizarBorrador(valor, repeticiones)} onRepeticiones={valor => actualizarBorrador(peso, valor)} onSumar={ajustarPeso} onRegistrar={registrar}
               onEjercicio={elegirEjercicio} onNuevo={() => setNuevoAbierto(true)} onEditar={iniciarEdicion}
               onReabrir={() => { if (guardar(reabrirSesion(registro, activo.id))) setMensaje('Sesión reabierta. Podés seguir registrando.'); }}
-              onReiniciar={reiniciarEntrenamiento} onFinalizar={cerrarEntrenamiento} cierrePendiente={cierrePendiente} onPedirCierre={() => setCierrePendiente(true)} onCancelarCierre={() => setCierrePendiente(false)}
-              edicion={editorSerie} mensaje={mensaje} />
+              onFinalizar={cerrarEntrenamiento} cierrePendiente={cierrePendiente} onPedirCierre={() => setCierrePendiente(true)} onCancelarCierre={() => setCierrePendiente(false)}
+              edicion={editorSerie} mensaje={mensaje} hayBorrador={hayBorrador} avisoBorrador={avisoBorrador} sesiones={entrenamientos} />
           </div>}
         </section>
 
@@ -339,6 +377,9 @@ export default function App() {
             } catch (problema) { return { ok: false, error: (problema as Error).message }; }
           }} />
           <BackupPanel registro={registro} habilitado={puedeEscribir} importacionBloqueada={Boolean(edicion) || rutinaEnEdicion} onImportar={importar} onVerificar={verificarVigencia} />
+          {activo?.fecha && <details className="card advanced-entry"><summary>Herramientas de prueba <span>Reiniciar la sesión seleccionada</span></summary><div><p className="muted">Sesión: {activo.nombre} · {mostrarFecha(activo.fecha)}. Solo para repetir el flujo de prueba.</p>
+            {!reinicioPendiente ? <button type="button" className="button secondary reset-button" disabled={!puedeEscribir || Boolean(edicion)} onClick={() => setReinicioPendiente(true)}>Reiniciar entrenamiento (prueba)</button> : <div className="reset-confirm"><p>Se borrarán las {activo.series.length} series y los borradores de esta sesión. Volverá al primer ejercicio. No se puede deshacer. Los demás entrenamientos se conservan.</p><div className="edit-actions"><button type="button" className="button secondary reset-button" disabled={!puedeEscribir || Boolean(edicion)} onClick={reiniciarEntrenamiento}>Sí, reiniciar</button><button type="button" className="button secondary" onClick={() => setReinicioPendiente(false)}>Cancelar</button></div></div>}
+          </div></details>}
           <details className="card advanced-entry"><summary>Registrar en otra fecha <span>Para completar un entrenamiento anterior</span></summary><div>
             <form onSubmit={crear} className="session-form">
               <label className="full-field">Rutina<select value={diaId} onChange={e => elegirDia(e.target.value)} disabled={!puedeEscribir || Boolean(edicion)}><option value="">Sin rutina · Press de banca</option>{rutinas.map(r => <option key={r.id} value={r.id}>{r.titulo}</option>)}</select></label>

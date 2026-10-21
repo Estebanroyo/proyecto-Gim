@@ -22,7 +22,7 @@ La app debe recuperar el último entrenamiento y ejercicio utilizados. En una se
 
 ## Capabilities and Constraints
 
-- Código existente: React, TypeScript, Vite y vite-plugin-pwa; versión de interfaz actual 0.10.
+- Código existente: React, TypeScript, Vite y vite-plugin-pwa; versión de interfaz actual 0.12.
 - Tres módulos: Entrenar, Historial y Configuración. Configuración contiene rutinas, respaldos, registro en otra fecha e instalación/actualización.
 - Guardado local inmediato por serie, con actualización de pantalla y avance después de una escritura exitosa. Sin backend, cuenta ni sincronización automática.
 - Una sesión por identidad de rutina y fecha; si ya existe, se continúa la misma. No se borran automáticamente duplicados históricos.
@@ -32,7 +32,9 @@ La app debe recuperar el último entrenamiento y ejercicio utilizados. En una se
 - Referencias visuales locales para la rutina original, series en filas con estados y vista compacta de ejercicios. Los ejercicios personalizados sin imagen reconocida utilizan una alternativa neutra.
 - Datos v3 en localStorage; respaldos JSON de sesiones y catálogo, con validación, vista previa y conflictos sin sobrescritura forzada.
 - Acceso offline después de preparar la app con conexión. Navegadores, perfiles y orígenes diferentes tienen almacenamiento separado.
-- Despliegue local; la URL loopback de esta computadora no proporciona acceso desde otro dispositivo. Publicación y uso real desde celular quedan pendientes.
+- Publicación gratuita en https://estebanroyo.github.io/proyecto-Gim/ mediante GitHub Pages y Actions. La URL local y la pública tienen almacenamiento separado.
+- Borrador de serie local por sesión y ejercicio, separado de la confirmación. Guardado y corrección en la ficha del ejercicio. Herramientas de prueba dentro de Configuración.
+- Criterio explícito de peso por ejercicio en sesiones futuras; los datos anteriores sin criterio no se reinterpretan. Historial con frecuencia semanal y comparación de repeticiones a la misma carga y criterio.
 - Se muestra volumen externo de entrenamiento. No inferir calorías fiables por serie a partir de peso y repeticiones ni inventar precisión o datos fisiológicos.
 
 ## Brand Commitments

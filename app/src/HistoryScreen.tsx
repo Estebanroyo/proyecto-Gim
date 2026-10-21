@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { mostrarFecha } from './workout';
 import type { Sesion } from './training';
+import ProgressPanel from './ProgressPanel';
+import { etiquetaPeso } from './weight';
 
 type Props = { sesiones: Sesion[]; seleccionada: string; onAbrir: (id: string) => void };
 
@@ -19,10 +21,11 @@ export default function HistoryScreen({ sesiones, seleccionada, onAbrir }: Props
         <div className="history-stats"><div><strong>{sesion.series.length}</strong><span>series</span></div><div><strong>{sesion.series.reduce((total, s) => total + s.repeticiones, 0)}</strong><span>repeticiones</span></div></div>
         <div className="exercise-results">{sesion.ejercicios.map(e => {
           const series = sesion.series.filter(s => s.ejercicioId === e.id);
-          return <div key={e.id}><div className="result-title"><h3>{e.nombre}</h3><span>{series.length}/{e.seriesObjetivo ?? '—'} series</span></div>{series.length ? <p className="set-chips">{series.map((s, indice) => <span key={s.id}>#{indice + 1} · {s.pesoKg.toLocaleString('es-AR')} kg × {s.repeticiones}</span>)}</p> : <p className="muted">Sin series registradas</p>}</div>;
+          return <div key={e.id}><div className="result-title"><h3>{e.nombre}</h3><span>{series.length}/{e.seriesObjetivo ?? '—'} series</span></div><p className="muted">{etiquetaPeso(e)}</p>{series.length ? <p className="set-chips">{series.map((s, indice) => <span key={s.id}>#{indice + 1} · {s.pesoKg.toLocaleString('es-AR')} kg × {s.repeticiones}</span>)}</p> : <p className="muted">Sin series registradas</p>}</div>;
         })}</div>
         <details className="quiet-details" onToggle={e => setCronologiaAbierta(e.currentTarget.open)}><summary>Ver orden cronológico</summary>{cronologiaAbierta && <ol className="compact-diary">{sesion.series.map(s => <li key={s.id}><div><strong>{sesion.ejercicios.find(e => e.id === s.ejercicioId)?.nombre}</strong><span>{s.pesoKg.toLocaleString('es-AR')} kg × {s.repeticiones} reps · {s.registradaEn ? new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit' }).format(new Date(s.registradaEn)) : 'Sin hora registrada'}</span></div></li>)}</ol>}</details>
       </article>}
+      {sesion && <ProgressPanel sesiones={sesiones} sesion={sesion} frecuencia={visibles} />}
     </>}
   </div>;
 }

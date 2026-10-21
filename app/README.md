@@ -1,6 +1,8 @@
 # GIM · Bitácora
 
-Versión 0.11 del proyecto del curso: React + TypeScript + Vite + vite-plugin-pwa.
+Versión 0.12 del proyecto del curso: React + TypeScript + Vite + vite-plugin-pwa.
+
+v0.12 responde al recorrido de uso: confirmación en la fila, corrección desde los valores visibles, borradores de serie, atajos de resta, criterio de carga y comparación histórica. Herramientas de prueba separadas en Configuración. El dato v3 agrega un criterio opcional sin reinterpretar registros antiguos. Ver ../docs/revision-uso-v0.12.md.
 
 v0.11 mejora el desplazamiento vertical en móvil y agrega navegación anterior/siguiente y por gesto lateral en la ficha del ejercicio, también para sesiones finalizadas. El cambio se completa al superar el 25 % del ancho o con un gesto rápido; no hay posición intermedia persistente. Ver ../docs/navegacion-movil.md. Sin cambios del formato de datos ni guardado automático al navegar.
 

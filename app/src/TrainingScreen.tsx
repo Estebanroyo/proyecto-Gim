@@ -8,6 +8,8 @@ import ExerciseSets from './ExerciseSets';
 import ExerciseVisual, { tieneReferenciaVisual } from './ExerciseVisual';
 import RoutineOverview from './RoutineOverview';
 import SwipeExerciseCard from './SwipeExerciseCard';
+import { ayudaPeso, etiquetaPeso } from './weight';
+import PreviousExercise from './PreviousExercise';
 
 type Props = {
   sesion: Sesion; ejercicio: EjercicioPlan; series: SerieEjercicio[];
@@ -17,15 +19,15 @@ type Props = {
   onSumar: (valor: number) => void; onRegistrar: () => void;
   onEjercicio: (id: string) => void; onNuevo: () => void;
   onEditar: (id: string, boton: HTMLButtonElement) => void;
-  onReabrir: () => void; onFinalizar: () => void; onReiniciar: () => boolean;
+  onReabrir: () => void; onFinalizar: () => void;
   cierrePendiente: boolean; onPedirCierre: () => void; onCancelarCierre: () => void;
   edicion: ReactNode; mensaje: string;
+  hayBorrador: boolean; avisoBorrador: string; sesiones: Sesion[];
 };
 
 export default function TrainingScreen(p: Props) {
   const { sesion, ejercicio, series } = p;
   const [registroAbierto, setRegistroAbierto] = useState(false);
-  const [reinicioPendiente, setReinicioPendiente] = useState(false);
   const { cantidades, ejerciciosPorId } = useMemo(() => {
     const cantidades = new Map<string, number>();
     for (const serie of sesion.series) cantidades.set(serie.ejercicioId, (cantidades.get(serie.ejercicioId) ?? 0) + 1);
@@ -73,17 +75,21 @@ export default function TrainingScreen(p: Props) {
       {navegacion(animar)}
       <div className="set-progress"><strong>{etiquetaSerie}</strong><span>{ejercicio.repeticionesObjetivo ? `Objetivo: ${ejercicio.repeticionesObjetivo} reps` : 'A tu ritmo'}</span></div>
       {ejercicio.notas && <p className="exercise-notes">{ejercicio.notas}</p>}
-      <form onSubmit={evento => { evento.preventDefault(); p.onRegistrar(); }}>
-        <ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled={inactivo} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} />
+      <p className="weight-convention" id="criterio-peso"><strong>{etiquetaPeso(ejercicio)}</strong> · {ayudaPeso(ejercicio)}</p>
+      {p.edicion}
+      <form hidden={p.editando} onSubmit={evento => { evento.preventDefault(); p.onRegistrar(); }}>
+        <ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled={inactivo} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} onEditar={p.onEditar} />
+        <p className={`draft-status ${p.avisoBorrador ? 'draft-warning' : ''}`} role="status">{p.avisoBorrador || (p.hayBorrador ? 'Borrador conservado en este dispositivo. La serie todavía no está registrada.' : 'Valores sugeridos. Tocá el botón de la fila para guardar la serie.')}</p>
         <p className="reference-line" id="referencia-carga">{ultimo ? `Última serie: ${ultimo.pesoKg.toLocaleString('es-AR')} kg × ${ultimo.repeticiones} reps` : p.referencia?.origen.startsWith('Primera') ? `Carga inicial anterior: ${p.referencia.pesoKg.toLocaleString('es-AR')} kg · podés ajustarla` : 'Sin carga anterior. Ajustá el peso antes de registrar.'}</p>
-        <details className="quiet-details weight-shortcuts"><summary>Ajustar peso con botones</summary><div className="weight-controls">{[1.25, 5, 10, 20].map(valor => <button type="button" className="weight-step" key={valor} onClick={() => p.onSumar(valor)} disabled={inactivo}>+{valor.toLocaleString('es-AR')} <span>kg</span></button>)}</div><div className="weight-tools"><button type="button" onClick={() => p.onSumar(-1.25)} disabled={inactivo}>−1,25 kg</button><button type="button" onClick={() => p.onPeso('0')} disabled={inactivo}>Poner en 0</button></div></details>
-        <button type="submit" className="button primary log-set" disabled={inactivo}>Guardar serie <Icon nombre="check" /></button>
+        <details className="quiet-details weight-shortcuts"><summary>Ajustar peso con botones</summary>{[1, -1].map(signo => <div className="weight-controls" key={signo}>{[1.25, 5, 10, 20].map(valor => <button type="button" className="weight-step" key={valor} onClick={() => p.onSumar(signo * valor)} disabled={inactivo}>{signo === 1 ? '+' : '−'}{valor.toLocaleString('es-AR')} <span>kg</span></button>)}</div>)}<div className="weight-tools"><button type="button" onClick={() => p.onPeso('0')} disabled={inactivo}>Poner en 0</button></div></details>
         <p className="inline-feedback" role="status" aria-live="polite" aria-atomic="true">{p.mensaje || 'Se guarda al confirmar, también sin conexión.'}</p>
       </form>
+      {series.length > 0 && !p.editando && <p className="reference-line">Tocá el peso o las repeticiones de una serie guardada para corregirla.</p>}
+      <PreviousExercise sesiones={p.sesiones} sesion={sesion} ejercicio={ejercicio} />
       <div className="next-exercise"><span>Después de este ejercicio</span><strong>{siguiente?.nombre ?? 'Fin del entrenamiento'}</strong></div>
     </>}</SwipeExerciseCard>}
 
-    {(sesion.finalizadaEn || sesion.fecha === null) && <SwipeExerciseCard {...gesto} className="reviewed-exercise">{animar => <>{identidad}{navegacion(animar)}<p className="muted">{series.length ? `${series.length} series guardadas${ejercicio.seriesObjetivo ? ` · objetivo: ${ejercicio.seriesObjetivo} series` : ''}` : 'Sin series registradas en este ejercicio'}</p><ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} /></>}</SwipeExerciseCard>}
+    {(sesion.finalizadaEn || sesion.fecha === null) && <SwipeExerciseCard {...gesto} className="reviewed-exercise">{animar => <>{identidad}{navegacion(animar)}<p className="muted">{series.length ? `${series.length} series guardadas${ejercicio.seriesObjetivo ? ` · objetivo: ${ejercicio.seriesObjetivo} series` : ''}` : 'Sin series registradas en este ejercicio'}</p><p className="weight-convention"><strong>{etiquetaPeso(ejercicio)}</strong> · {ayudaPeso(ejercicio)}</p>{p.edicion}<div hidden={p.editando}><ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled={p.bloqueado || p.editando} registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} onEditar={p.onEditar} /></div><PreviousExercise sesiones={p.sesiones} sesion={sesion} ejercicio={ejercicio} /></>}</SwipeExerciseCard>}
 
     </div><aside className="training-sidebar">
     <div className="session-progress"><span>{conObjetivo ? `${completados} de ${conObjetivo} ejercicios completados` : `${cantidades.size} ejercicios registrados`}</span><span>{sesion.series.length} series</span>{conObjetivo > 0 && <progress value={completados} max={conObjetivo} aria-label="Ejercicios completados" />}</div>
@@ -94,23 +100,16 @@ export default function TrainingScreen(p: Props) {
     }} />
 
     </aside><div className="training-secondary">
-    <details className="card session-record" open={registroAbierto || p.editando} onToggle={e => setRegistroAbierto(e.currentTarget.open)}>
+    <details className="card session-record" open={registroAbierto} onToggle={e => setRegistroAbierto(e.currentTarget.open)}>
       <summary>Series registradas <span>{sesion.series.length}</span></summary>
-      {(registroAbierto || p.editando) && <div className="record-content">
+      {registroAbierto && <div className="record-content">
         {!sesion.series.length ? <p className="muted">Tu registro aparecerá acá después de la primera serie.</p> : <ol className="compact-diary">{sesion.series.map((serie, indiceSerie) => <li key={serie.id}><span className="diary-order">{indiceSerie + 1}</span><div><strong>{ejerciciosPorId.get(serie.ejercicioId)?.nombre}</strong><span>{serie.pesoKg.toLocaleString('es-AR')} kg × {serie.repeticiones} reps</span></div><button type="button" className="edit-button" aria-label={`Corregir serie ${indiceSerie + 1} de ${ejerciciosPorId.get(serie.ejercicioId)?.nombre}`} disabled={p.bloqueado || !sesion.fecha || p.editando} onClick={e => p.onEditar(serie.id, e.currentTarget)}>Corregir</button></li>)}</ol>}
-        {p.edicion}
       </div>}
     </details>
 
     {sesion.fecha !== null && <details className="quiet-details session-options"><summary>Opciones de esta sesión</summary>
-      <div className="edit-actions"><button className="button secondary" type="button" onClick={p.onNuevo} disabled={p.editando}>Elegir otra rutina</button>{!sesion.finalizadaEn && <button className="button secondary" type="button" disabled={p.bloqueado || p.editando || !sesion.series.length} onClick={() => { setReinicioPendiente(false); p.onPedirCierre(); }}>Terminar antes</button>}</div>
+      <div className="edit-actions"><button className="button secondary" type="button" onClick={p.onNuevo} disabled={p.editando}>Elegir otra rutina</button>{!sesion.finalizadaEn && <button className="button secondary" type="button" disabled={p.bloqueado || p.editando || !sesion.series.length} onClick={p.onPedirCierre}>Terminar antes</button>}</div>
       {p.cierrePendiente && <div className="finish-confirm"><p>Se guardará lo realizado y quedarán visibles los ejercicios pendientes.</p><div className="edit-actions"><button type="button" className="button" onClick={p.onFinalizar} disabled={p.bloqueado}>Finalizar sesión</button><button type="button" className="button secondary" onClick={p.onCancelarCierre}>Seguir entrenando</button></div></div>}
-      <div className="reset-tools">
-        {!reinicioPendiente ? <button type="button" className="button secondary reset-button" disabled={p.bloqueado || p.editando} onClick={() => { p.onCancelarCierre(); setReinicioPendiente(true); }}>Reiniciar entrenamiento (prueba)</button> : <div className="reset-confirm">
-          <p>Se borrarán las {sesion.series.length} series de «{sesion.nombre}» del {mostrarFecha(sesion.fecha)} y volverás al primer ejercicio. Esta acción no se puede deshacer. La rutina y los demás entrenamientos se conservan.</p>
-          <div className="edit-actions"><button type="button" className="button secondary reset-button" disabled={p.bloqueado || p.editando} onClick={() => { if (p.onReiniciar()) { setReinicioPendiente(false); setRegistroAbierto(false); } }}>Sí, reiniciar</button><button type="button" className="button secondary" onClick={() => setReinicioPendiente(false)}>Cancelar</button></div>
-        </div>}
-      </div>
     </details>}
     </div></div>
   </>;
