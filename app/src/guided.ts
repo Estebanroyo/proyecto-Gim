@@ -1,6 +1,6 @@
 import { validarRutinas } from './training.ts';
 import type { EjercicioPlan, RegistroActual, RutinaDia, Sesion } from './training';
-import { criterioComparable, mismoEjercicio } from './progress';
+import { criterioComparable, mismoEjercicio } from './progress.ts';
 
 export function ejercicioPendiente(sesion: Sesion): EjercicioPlan | undefined {
   return sesion.ejercicios.find(e => e.seriesObjetivo === null || sesion.series.filter(s => s.ejercicioId === e.id).length < e.seriesObjetivo);
