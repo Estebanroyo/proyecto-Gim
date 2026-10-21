@@ -403,6 +403,10 @@ footer { font-size: 13px; color: var(--muted); text-align: center; line-height: 
 .exercise-navigation { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 20px; }
 .exercise-navigation > span { color: var(--muted); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .exercise-navigation .button { min-height: 44px; gap: 6px; }
+@media (max-width: 380px) {
+ .exercise-navigation .button { padding-inline: 8px; font-size: 12px; }
+ .exercise-navigation .icon { width: 18px; height: 18px; }
+}
 @media (max-width: 880px), (pointer: coarse) {
  .exercise-sets { max-height: none; overflow: visible; }
  .exercise-sets thead { position: static; }
