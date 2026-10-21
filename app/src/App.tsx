@@ -290,7 +290,7 @@ export default function App() {
     <div className="app-shell">
       <header className="site-header">
         <button className="brand" type="button" aria-label="GIM, volver al entrenamiento" disabled={Boolean(edicion)} onClick={() => cambiarModulo('entrenar')}><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width="32" height="32" />GIM<span>BITÁCORA</span></button>
-        <span className="local-label">Personal · v0.10.1</span>
+        <span className="local-label">Personal · v0.11</span>
       </header>
       <nav className="module-nav" aria-label="Secciones de la aplicación">
         <button type="button" aria-current={modulo === 'entrenar' ? 'page' : undefined} disabled={Boolean(edicion)} onClick={() => cambiarModulo('entrenar')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7v10M2 9v6M19 7v10M22 9v6M5 12h14" /></svg>Entrenar</button>

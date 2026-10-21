@@ -1,6 +1,8 @@
 # GIM · Bitácora
 
-Versión local 0.10 del proyecto del curso: React + TypeScript + Vite + vite-plugin-pwa.
+Versión 0.11 del proyecto del curso: React + TypeScript + Vite + vite-plugin-pwa.
+
+v0.11 mejora el desplazamiento vertical en móvil y agrega navegación anterior/siguiente y por gesto lateral en la ficha del ejercicio, también para sesiones finalizadas. El cambio se completa al superar el 25 % del ancho o con un gesto rápido; no hay posición intermedia persistente. Ver ../docs/navegacion-movil.md. Sin cambios del formato de datos ni guardado automático al navegar.
 
 ## Alcance
 

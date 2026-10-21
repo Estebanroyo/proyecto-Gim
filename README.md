@@ -1,6 +1,6 @@
 # GIM · Bitácora personal de entrenamiento
 
-PWA para seguir rutinas y registrar series, peso y repeticiones desde el gimnasio. React, TypeScript, Vite y vite-plugin-pwa. Versión 0.10.1.
+PWA para seguir rutinas y registrar series, peso y repeticiones desde el gimnasio. React, TypeScript, Vite y vite-plugin-pwa. Versión 0.11.
 
 ## Desarrollo
 
@@ -37,6 +37,7 @@ Ver [configuración y límites del despliegue](docs/despliegue.md).
 - Editor de rutinas y respaldo JSON con validación.
 - Acceso offline después de preparar la aplicación con conexión.
 - Reinicio de una sesión con confirmación explícita para repetir el flujo.
+- Navegación por ejercicios con anterior/siguiente y gesto lateral, también al revisar sesiones finalizadas. Tabla sin scroll interno en móvil.
 
 No hay cuentas, backend ni sincronización automática. Cambiar de origen o dispositivo requiere exportar e importar un respaldo desde Configuración. No se publican datos de entrenamientos al subir el código.
 

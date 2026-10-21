@@ -39,3 +39,5 @@ Paneles de 12 px de radio, sin brillos ni texturas decorativas. Ilustraciones ex
 Fuente e ilustraciones son locales y están incluidas en el precaché PWA. Sin llamadas externas mientras se entrena. Los colores de navegador y manifest coinciden con el fondo de la interfaz. No se alteran datos ni migraciones por un cambio visual.
 
 Esta dirección está implementada en código. No se verificó renderizado ni uso en navegador, por la instrucción vigente de no ejecutar tests ni automatización de navegador.
+
+En v0.11, la ficha de ejercicio incorpora Anterior/Siguiente y desplazamiento lateral con umbral del 25 % o gesto rápido, también al revisar resultados. El desplazamiento vertical y el zoom quedan a cargo del navegador. En móvil, la tabla utiliza su altura natural y no captura un scroll interno; los botones y campos conservan sus gestos habituales. La ficha siempre vuelve a una posición completa.

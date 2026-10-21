@@ -7,6 +7,7 @@ import { siguienteEjercicio } from './guided';
 import ExerciseSets from './ExerciseSets';
 import ExerciseVisual, { tieneReferenciaVisual } from './ExerciseVisual';
 import RoutineOverview from './RoutineOverview';
+import SwipeExerciseCard from './SwipeExerciseCard';
 
 type Props = {
   sesion: Sesion; ejercicio: EjercicioPlan; series: SerieEjercicio[];
@@ -34,6 +35,16 @@ export default function TrainingScreen(p: Props) {
   const conObjetivo = sesion.ejercicios.filter(e => e.seriesObjetivo !== null).length;
   const pendientes = conObjetivo - completados;
   const indice = sesion.ejercicios.findIndex(e => e.id === ejercicio.id);
+  function navegar(direccion: -1 | 1) {
+    const destino = sesion.ejercicios[indice + direccion];
+    if (destino && !p.editando) p.onEjercicio(destino.id);
+  }
+  const navegacion = <nav className="exercise-navigation" aria-label="Recorrer ejercicios">
+    <button type="button" className="button secondary small" disabled={p.editando || indice <= 0} onClick={() => navegar(-1)}><Icon nombre="arrow-left" /> Anterior</button>
+    <span aria-live="polite">{indice + 1} / {sesion.ejercicios.length}</span>
+    <button type="button" className="button secondary small" disabled={p.editando || indice >= sesion.ejercicios.length - 1} onClick={() => navegar(1)}>Siguiente <Icon nombre="arrow-right" /></button>
+  </nav>;
+  const gesto = { ejercicioId: ejercicio.id, disabled: p.editando, anterior: indice > 0, siguiente: indice < sesion.ejercicios.length - 1, onNavegar: navegar };
   const siguiente = siguienteEjercicio(sesion, ejercicio.id);
   const ultimo = series.at(-1);
   const inactivo = p.bloqueado || p.editando || Boolean(sesion.finalizadaEn);
@@ -49,8 +60,9 @@ export default function TrainingScreen(p: Props) {
       {pendientes > 0 && <p className="muted">El registro conserva también los objetivos que quedaron pendientes.</p>}
       <button type="button" className="button primary" onClick={p.onNuevo} disabled={p.editando}>Elegir próximo entrenamiento <Icon nombre="arrow-right" /></button>
       <details className="quiet-details"><summary>Revisar o continuar esta sesión</summary><button className="button secondary" type="button" disabled={p.bloqueado || p.editando} onClick={p.onReabrir}>Continuar agregando series</button><p className="muted">Para corregir una serie, usá el registro que aparece debajo.</p></details>
-    </section> : <section className="card focus-card" aria-labelledby="ejercicio">
+    </section> : <SwipeExerciseCard {...gesto}>
       {identidad}
+      {navegacion}
       <div className="set-progress"><strong>{etiquetaSerie}</strong><span>{ejercicio.repeticionesObjetivo ? `Objetivo: ${ejercicio.repeticionesObjetivo} reps` : 'A tu ritmo'}</span></div>
       {ejercicio.notas && <p className="exercise-notes">{ejercicio.notas}</p>}
       <form onSubmit={evento => { evento.preventDefault(); p.onRegistrar(); }}>
@@ -61,9 +73,9 @@ export default function TrainingScreen(p: Props) {
         <p className="inline-feedback" role="status" aria-live="polite" aria-atomic="true">{p.mensaje || 'Se guarda al confirmar, también sin conexión.'}</p>
       </form>
       <div className="next-exercise"><span>Después de este ejercicio</span><strong>{siguiente?.nombre ?? 'Fin del entrenamiento'}</strong></div>
-    </section>}
+    </SwipeExerciseCard>}
 
-    {(sesion.finalizadaEn || sesion.fecha === null) && <section className="card focus-card reviewed-exercise">{identidad}<p className="muted">Registro del ejercicio · {series.length} series guardadas</p><ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} /></section>}
+    {(sesion.finalizadaEn || sesion.fecha === null) && <SwipeExerciseCard {...gesto} className="reviewed-exercise">{identidad}{navegacion}<p className="muted">{series.length ? `${series.length} series guardadas${ejercicio.seriesObjetivo ? ` · objetivo: ${ejercicio.seriesObjetivo} series` : ''}` : 'Sin series registradas en este ejercicio'}</p><ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} /></SwipeExerciseCard>}
 
     </div><aside className="training-sidebar">
     <div className="session-progress"><span>{conObjetivo ? `${completados} de ${conObjetivo} ejercicios completados` : `${cantidades.size} ejercicios registrados`}</span><span>{sesion.series.length} series</span>{conObjetivo > 0 && <progress value={completados} max={conObjetivo} aria-label="Ejercicios completados" />}</div>

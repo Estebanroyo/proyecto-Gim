@@ -1,8 +1,9 @@
-type Nombre = 'check' | 'arrow-right' | 'up' | 'down';
+type Nombre = 'check' | 'arrow-right' | 'arrow-left' | 'up' | 'down';
 
 const trazos: Record<Nombre, string> = {
   check: 'm5 12 4 4L19 6',
   'arrow-right': 'M4 12h15m-6-6 6 6-6 6',
+  'arrow-left': 'M20 12H5m6-6-6 6 6 6',
   up: 'm6 14 6-6 6 6',
   down: 'm6 10 6 6 6-6',
 };

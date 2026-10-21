@@ -283,7 +283,7 @@ footer { font-size: 13px; color: var(--muted); text-align: center; line-height: 
 .exercise-visual.mini { width: 44px; height: 44px; flex: 0 0 44px; }
 .exercise-visual.no-visual { background-image: none; display: grid; place-items: center; background-color: var(--soft); color: var(--muted); }
 .no-visual svg { width: 48%; height: 48%; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
-.exercise-sets { max-height: 330px; overflow: auto; position: relative; margin: 0 0 14px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--field-line) var(--background); font-variant-numeric: tabular-nums; }
+.exercise-sets { max-height: 330px; overflow: auto; position: relative; margin: 0 0 14px; overscroll-behavior: auto; scrollbar-width: thin; scrollbar-color: var(--field-line) var(--background); font-variant-numeric: tabular-nums; }
 .exercise-sets table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; text-align: center; }
 .exercise-sets thead { position: sticky; top: 0; z-index: 1; }
 .exercise-sets thead th { background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 550; padding: 10px 4px; border-bottom: 1px solid var(--line); }
@@ -310,7 +310,7 @@ footer { font-size: 13px; color: var(--muted); text-align: center; line-height: 
 .routine-overview-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .routine-overview-heading h2 { font-size: 18px; font-weight: 650; margin: 0; }
 .routine-overview-heading > span { font-size: 13px; color: var(--muted); }
-.routine-overview ol { list-style: none; padding: 2px; margin: 0; max-height: 340px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--field-line) var(--background); }
+.routine-overview ol { list-style: none; padding: 2px; margin: 0; max-height: 340px; overflow: auto; overscroll-behavior: auto; scrollbar-width: thin; scrollbar-color: var(--field-line) var(--background); }
 .routine-overview li + li { margin-top: 4px; }
 .routine-exercise { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; border: 1px solid transparent; border-radius: 9px; text-align: left; color: var(--ink); background: transparent; }
 .routine-exercise.is-current { border-color: var(--accent); background: var(--current-bg); }
@@ -396,3 +396,18 @@ footer { font-size: 13px; color: var(--muted); text-align: center; line-height: 
 .reset-button { color: var(--error); border-color: var(--error-line); }
 .reset-confirm { padding: 16px; border-radius: 12px; background: var(--error-bg); color: var(--error); font-size: 14px; line-height: 1.6; }
 .reset-confirm p { margin: 0; }
+.exercise-swipe-viewport { min-width: 0; overflow: clip; touch-action: pan-y pinch-zoom; }
+.swipe-exercise { transition: transform 180ms ease-out; }
+.swipe-exercise.is-dragging { transition: none; user-select: none; }
+.exercise-identity img, .exercise-identity svg { pointer-events: none; }
+.exercise-navigation { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 20px; }
+.exercise-navigation > span { color: var(--muted); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.exercise-navigation .button { min-height: 44px; gap: 6px; }
+@media (max-width: 880px), (pointer: coarse) {
+ .exercise-sets { max-height: none; overflow: visible; }
+ .exercise-sets thead { position: static; }
+ .exercise-sets input { touch-action: pan-y pinch-zoom; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .swipe-exercise { transition: none; }
+}
