@@ -326,7 +326,7 @@ export default function App() {
     <div className="app-shell">
       <header className="site-header">
         <button className="brand" type="button" aria-label="GIM, volver al entrenamiento" disabled={edicionActiva} onClick={() => cambiarModulo('entrenar')}><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width="32" height="32" />GIM<span>BITÁCORA</span></button>
-        <span className="local-label">Personal · v0.20.1</span>
+        <span className="local-label">Personal · v0.21.0</span>
       </header>
       {actualizacion && <div className="app-update-banner" role="status"><span>Hay una versión nueva de GIM lista para aplicar.</span><button type="button" className="button secondary small" disabled={edicionActiva || rutinaEnEdicion} onClick={() => { cambiarModulo('configuracion'); requestAnimationFrame(() => document.getElementById('instalacion-conexion')?.scrollIntoView({ block: 'center' })); }}>Ver actualización</button></div>}
       <nav className="module-nav" aria-label="Secciones de la aplicación">
@@ -369,14 +369,21 @@ export default function App() {
         <section hidden={modulo !== 'configuracion'} aria-label="Configuración" data-module="configuracion" className="settings-module">
           <div className="module-title"><h1 tabIndex={-1}>Configuración</h1><p>Prepará tus rutinas y cuidá tus registros.</p></div>
           {visitados.configuracion && <>
-          <RestSettings rest={rest} /><RoutineEditor rutinas={rutinas} sesiones={entrenamientos} habilitado={puedeEscribir} onBorrador={setRutinaEnEdicion} onGuardar={rutina => {
+          <h2 className="settings-section-title">Rutinas y registro</h2>
+          <RoutineEditor rutinas={rutinas} sesiones={entrenamientos} habilitado={puedeEscribir} onBorrador={setRutinaEnEdicion} onGuardar={rutina => {
             try {
               const resultado = persistir(guardarRutina(registro, rutinas, rutina));
               if (resultado.ok && !diaId) setDiaId(rutina.id);
               return resultado;
             } catch (problema) { return { ok: false, error: (problema as Error).message }; }
           }} />
-          <PlanLibrary registro={registro} rutinas={rutinas} disabled={!puedeEscribir || edicionActiva || rutinaEnEdicion} onGuardar={persistir}/><ProgressionPanel registro={registro} rutinas={rutinas} disabled={!puedeEscribir || edicionActiva || rutinaEnEdicion} onGuardar={persistir}/><BackupPanel registro={registro} habilitado={puedeEscribir} importacionBloqueada={edicionActiva || rutinaEnEdicion} onImportar={importar} onVerificar={verificarVigencia} />
+          <RestSettings rest={rest}/>
+          <h2 className="settings-section-title">Planes y progreso</h2>
+          <PlanLibrary registro={registro} rutinas={rutinas} disabled={!puedeEscribir || edicionActiva || rutinaEnEdicion} onGuardar={persistir}/><ProgressionPanel registro={registro} rutinas={rutinas} disabled={!puedeEscribir || edicionActiva || rutinaEnEdicion} onGuardar={persistir}/>
+          <h2 className="settings-section-title">Respaldo y datos</h2>
+          <BackupPanel registro={registro} habilitado={puedeEscribir} importacionBloqueada={edicionActiva || rutinaEnEdicion} onImportar={importar} onVerificar={verificarVigencia}/>
+          {<HistoryManagement registro={registro} disabled={!puedeEscribir || edicionActiva || rutinaEnEdicion} onVerificar={verificarVigencia} onGuardar={nuevo => { const res = importar(nuevo); if (res.ok) { rest.omitir(); if (!nuevo.entrenamientos.length) { try { localStorage.removeItem(claveNavegacion); } catch { setErrorNavegacion('Historial limpio; no se pudo retirar la navegación anterior.'); } } } return res; }} />}
+          <h2 className="settings-section-title">Más opciones</h2>
           {activo?.fecha && <details className="card advanced-entry"><summary>Herramientas de prueba <span>Reiniciar la sesión seleccionada</span></summary><div><p className="muted">Sesión: {activo.nombre} · {mostrarFecha(activo.fecha)}. Solo para repetir el flujo de prueba.</p>
             {!reinicioPendiente ? <button type="button" className="button secondary reset-button" disabled={!puedeEscribir || edicionActiva} onClick={() => setReinicioPendiente(true)}>Reiniciar entrenamiento (prueba)</button> : <div className="reset-confirm"><p>Se borrarán las {activo.series.length} series y los borradores de esta sesión. Volverá al primer ejercicio. No se puede deshacer. Los demás entrenamientos se conservan.</p><div className="edit-actions"><button type="button" className="button secondary reset-button" disabled={!puedeEscribir || edicionActiva} onClick={reiniciarEntrenamiento}>Sí, reiniciar</button><button type="button" className="button secondary" onClick={() => setReinicioPendiente(false)}>Cancelar</button></div></div>}
           </div></details>}
@@ -389,7 +396,8 @@ export default function App() {
             </form>
           </div></details>
           </>}
-          {visitados.configuracion && <HistoryManagement registro={registro} disabled={!puedeEscribir || edicionActiva || rutinaEnEdicion} onVerificar={verificarVigencia} onGuardar={nuevo => { const res = importar(nuevo); if (res.ok) { rest.omitir(); if (!nuevo.entrenamientos.length) { try { localStorage.removeItem(claveNavegacion); } catch { setErrorNavegacion('Historial limpio; no se pudo retirar la navegación anterior.'); } } } return res; }} />}
+
+          <h2 className="settings-section-title">Aplicación</h2>
           <PwaControls onActualizacion={setActualizacion} bloqueado={edicionActiva || rutinaEnEdicion} />
           <p className="settings-footnote">Tus datos se guardan en este navegador. El respaldo permite llevarlos a otro dispositivo; todavía no hay sincronización automática.</p>
         </section>

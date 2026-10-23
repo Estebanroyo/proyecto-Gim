@@ -22,7 +22,7 @@ La app debe recuperar el último entrenamiento y ejercicio utilizados. En una se
 
 ## Capabilities and Constraints
 
-- React, TypeScript, Vite y vite-plugin-pwa; versión local 0.20.1. Publicación de fuentes 0.20.1 mediante main y GitHub Actions.
+- React, TypeScript, Vite y vite-plugin-pwa; versión local 0.21.0 en rama feat/mobile-clarity-uupm. La base 0.20.1 está publicada en main; el rediseño no se desplegó.
 - Tres áreas: Entrenar, Historial y Configuración. Una acción principal para registrar; preparación y opciones avanzadas desplegables.
 - Guardado local antes de confirmar/avanzar, con borradores recuperables separados de resultados. Sin backend, cuenta ni sincronización automática.
 - Una sesión por rutina/fecha. Cada sesión copia ejercicios, objetivos, equipo y montaje. Editar plantillas o aceptar progresión solo cambia futuro.
@@ -66,3 +66,5 @@ Nombre actual: GIM · Bitácora. Interfaz y comunicación en español, con voseo
 Contrato actual, fuentes, límites y deuda: [entrega local 0.20](docs/entrega-0.20-ruta-principal.md). Continuidad exacta: [estado de desarrollo](docs/estado-desarrollo-gim.md). Las entregas anteriores conservan su evidencia por versión; compilación y revisión estática no validan uso móvil.
 
 Revisión local 0.20.1: limpieza recuperable de historial en Configuración, sin cambiar rutinas/bloques; no es borrado definitivo. Actualización visible, búsqueda manual, corrección y confirmación en registro avanzado, atajos de carga conservados con RIR/tramos. Alcance y operación real en docs/revision-plan-usabilidad-0.20.1.md; aceptación integral pendiente.
+
+Dirección móvil 0.21: sistema de interfaz basado en UI UX Pro Max, canónico en design-system/gim/MASTER.md. Serie actual en campos amplios, suma rápida y una confirmación; tablas/metadatos a pedido. No cambia el contrato de datos. Detalle y límites: docs/rediseno-movil-uupm-0.21.md.

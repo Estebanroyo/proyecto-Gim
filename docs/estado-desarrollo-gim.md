@@ -1,9 +1,9 @@
-# Estado técnico publicado · 0.20.1
+# Estado técnico · rama de claridad móvil
 
-La ruta principal E1–E8 está implementada en código; aceptación integral de uso pendiente. E9 conserva las condiciones de la [hoja de ruta](hoja-de-ruta-gim.md). Datos v5, respaldos 3 y planes portátiles 1; consultar [contratos de entrega](entrega-0.20-ruta-principal.md).
+Base 0.20.1 publicada en main, commit 1e4203c; GitHub Actions 39961864701 completado correctamente. Rediseño 0.21.0 separado en feat/mobile-clarity-uupm, sin fusionar ni desplegar sobre main.
 
-0.20.1 incorpora limpieza recuperable sin cambiar rutinas, aviso de actualización y consulta manual, confirmación/corrección del registro avanzado, atajos de carga con RIR/tramos y presentación coherente de unidades y ejercicios pospuestos. Sin cambio de esquema principal.
+UI UX Pro Max instalada y aplicada con criterio de PWA, celular y uso en gimnasio. Fuente de verdad: ../design-system/gim/MASTER.md. Alcance y límites: rediseno-movil-uupm-0.21.md. Impeccable Operate apoya consistencia y revisión estática.
 
-Se conserva localStorage como autoridad por origen, con lectura anterior, copia previa y detección de cambios externos. No hay transacciones entre pestañas, backend ni sincronización. Las copias auxiliares de recuperación no son respaldos externos.
+Compilación de producción correcta y detector de componentes sin hallazgos; sin tests, automatización de navegador ni validación móvil. Datos v5, respaldos3 y planes1 sin cambios. E1–E8 con implementación; aceptación integral pendiente. E9 condicionado.
 
-Compilación de producción y revisión estática realizadas. Sin tests ni automatización de escenarios; sin afirmación de validación móvil. La documentación operativa privada y los datos de navegadores no forman parte de este repositorio.
+Próximo paso: observar el registro de una serie en celular y resolver el primer hallazgo concreto. No publicar ni fusionar este rediseño por el solo hecho de estar compilado.

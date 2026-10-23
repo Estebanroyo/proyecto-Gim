@@ -1,4 +1,4 @@
-# GIM · aplicación local 0.20.1
+# GIM · aplicación de rama 0.21.0
 
 React, TypeScript, Vite y vite-plugin-pwa. Implementación local de la ruta principal hasta E8; pendiente de validación de uso. Tres áreas: Entrenar, Historial y Configuración. Consultar el [README general](../README.md) y la [entrega detallada](../docs/entrega-0.20-ruta-principal.md).
 
@@ -52,3 +52,5 @@ El aviso de actualización permite cargar la versión nueva. No eliminar datos p
 Estado operativo y evidencia: [punto de reanudación](../docs/estado-desarrollo-gim.md).
 
 Revisión 0.20.1: HistoryManagement.tsx gestiona limpieza recuperable y restauración sin conflictos. Copia auxiliar local fuera del respaldo principal; no es borrado permanente. PwaControls ofrece búsqueda de actualización y App avisa cuando está lista. [Detalle](../docs/revision-plan-usabilidad-0.20.1.md).
+
+Rediseño separado de main según UI UX Pro Max: [sistema canónico](../design-system/gim/MASTER.md). Serie actual en campos amplios con confirmación única, atajos reutilizados y consulta de tablas/metadatos a pedido. Sin cambio de esquema ni dependencias.

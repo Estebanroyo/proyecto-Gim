@@ -1,6 +1,6 @@
 # GIM · Bitácora personal de entrenamiento
 
-PWA personal para seguir rutinas y registrar lo realizado en el gimnasio, con prioridad de uso en celular. Versión 0.20.1. React, TypeScript, Vite y vite-plugin-pwa.
+PWA personal para seguir rutinas y registrar lo realizado en el gimnasio, con prioridad de uso en celular. Versión de la rama 0.21.0; base pública 0.20.1. React, TypeScript, Vite y vite-plugin-pwa.
 
 ## Usar y ejecutar
 
@@ -36,3 +36,5 @@ Sin cuenta, backend ni sincronización automática. Cada navegador/perfil/origen
 La implementación está compilada, pero la aceptación integral y ergonomía física siguen pendientes. No se realizaron tests ni automatización de escenarios para esta entrega. Los fixtures de tests históricos se conservan fuera de la compilación de producción y no son cobertura del contrato actual.
 
 GitHub Pages se publica desde main mediante Actions; el rediseño se trabaja por separado. [Despliegue](docs/despliegue.md). Recursos gráficos y fuentes locales; licencia OFL en app/public/fonts/OFL.txt.
+
+Rediseño móvil en esta rama: [entrega](docs/rediseno-movil-uupm-0.21.md) y [sistema canónico UI UX Pro Max](design-system/gim/MASTER.md). No integrado en main.

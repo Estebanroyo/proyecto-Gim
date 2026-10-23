@@ -1,4 +1,4 @@
-/* GIM · v0.10. Grafito, lima y paneles de registro. */
+/* GIM · Grafito y lima. Tokens comunes para registro en el gimnasio. */
 @font-face {
   font-family: 'Barlow Condensed';
   src: url('/fonts/BarlowCondensed-SemiBold.ttf') format('truetype');
@@ -8,21 +8,21 @@
 }
 :root {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #f0f4e9;
-  background: #111813;
+  color: #f5f7f8;
+  background: #101418;
   color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --heading-font: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
-  --ink: #f0f4e9;
-  --muted: #b0bba8;
-  --background: #111813;
-  --line: #344137;
-  --field-line: #52604c;
-  --surface: #1a241d;
-  --field: #101811;
-  --soft: #243127;
-  --current-bg: #2c3e25;
+  --ink: #f5f7f8;
+  --muted: #b7c1c9;
+  --background: #101418;
+  --line: #354047;
+  --field-line: #64727c;
+  --surface: #1a2126;
+  --field: #11171b;
+  --soft: #242e35;
+  --current-bg: #243226;
   --accent: #cef568;
   --accent-hover: #dfff8b;
   --on-accent: #17200e;
@@ -44,7 +44,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 h1:focus:not(:focus-visible) { outline: none; }
-::selection { background: var(--accent); color: var(--ink); }
+::selection { background: var(--accent); color: var(--on-accent); }
 input { caret-color: var(--ink); }
 [hidden] { display: none !important; }
 h1, h2, h3, strong, p, label { overflow-wrap: anywhere; }
@@ -218,7 +218,7 @@ footer { font-size: 13px; color: var(--muted); text-align: center; line-height: 
   .button:hover:not(:disabled) { background: var(--accent-hover); }
   .secondary:hover:not(:disabled), .edit-button:hover:not(:disabled), .weight-tools button:hover:not(:disabled) { background: var(--soft); color: var(--ink); }
   .routine-start-card:hover:not(:disabled) { background: var(--soft); border-color: var(--accent); }
-  .weight-step:hover:not(:disabled) { background: var(--accent); }
+  .weight-step:hover:not(:disabled) { background: var(--accent); color: var(--on-accent); }
   .module-nav > button:hover:not(:disabled):not([aria-current="page"]) { background: var(--soft); }
   summary:hover { color: var(--ink); }
 }
@@ -528,3 +528,68 @@ textarea:disabled { opacity: .6; }
 .history-management .edit-actions { flex-wrap: wrap; }
 .history-recovery { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
 .next-exercise strong { overflow-wrap: anywhere; }
+
+/* UI UX Pro Max · registro móvil: el dato actual precede al detalle. */
+.focus-inputs { gap: 12px; margin: 0 0 12px; }
+.focus-inputs label { font-size: 15px; line-height: 1.5; }
+.focus-inputs input { min-height: 72px; font-size: clamp(28px, 8vw, 36px); border-width: 1px; touch-action: pan-y pinch-zoom; }
+.weight-adjustments .weight-controls { gap: 8px; margin: 0; }
+.weight-adjustments .weight-step { min-height: 56px; font-size: 16px; padding: 8px 4px; }
+.weight-adjustments .weight-step > span { display: block; margin: 2px 0 0; font-size: 11px; line-height: 1.2; }
+.weight-secondary { margin: 4px 0 12px; }
+.weight-secondary > summary { min-height: 44px; padding-block: 10px; text-align: left; font-size: 13px; }
+.log-set { display: flex; width: 100%; min-height: 56px; font-size: 17px; justify-content: center; }
+.focus-card .exercise-navigation { margin: 8px 0 16px; }
+.focus-card .exercise-identity { gap: 12px; margin-bottom: 8px; }
+.focus-card .exercise-identity h2 { font-family: inherit; font-size: clamp(24px, 5vw, 30px); font-weight: 700; line-height: 1.2; margin: 8px 0 0; }
+.focus-card .exercise-identity figure { flex-basis: 64px; }
+.focus-card .exercise-identity .exercise-visual { width: 64px; height: 64px; }
+.focus-card .exercise-identity figcaption { font-size: 11px; }
+.focus-card .set-progress { margin: 0 0 12px; gap: 4px 12px; }
+.focus-card .set-progress > strong { font-size: 18px; }
+.focus-card .weight-convention { font-size: 13px; margin: 0 0 10px; }
+.focus-card .prescription-hint { margin-bottom: 12px; }
+.focus-card .reference-line { margin: 12px 0; font-size: 13px; }
+.focus-card .inline-feedback { text-align: left; margin-top: 12px; font-size: 14px; }
+.focus-card .setup-notes { margin-top: 18px; margin-bottom: 0; }
+.exercise-context { border-top: 1px solid var(--line); }
+.exercise-context .prescribed-sets { margin-bottom: 12px; }
+.exercise-record .exercise-sets { max-height: none; overflow: visible; }
+.routine-navigation { margin-top: 0; }
+.training-sidebar > .quiet-details { border-top: 1px solid var(--line); }
+.training-sidebar .routine-overview ol { max-height: none; overflow: visible; }
+.training-sidebar .session-summary { margin-top: 0; }
+.workout-context h1 { font-family: inherit; font-size: 22px; font-weight: 650; margin-bottom: 4px; }
+.workout-context { margin: 20px 0 16px; }
+.module-title h1 { font-family: inherit; font-size: 30px; font-weight: 700; letter-spacing: -.02em; }
+.start-routines { grid-template-columns: minmax(0, 1fr); }
+.routine-start-card { min-height: 104px; flex-direction: row; align-items: center; gap: 16px; padding: 18px; }
+.routine-start-copy > strong { font-family: inherit; font-size: 20px; line-height: 1.4; }
+.routine-start-copy > span { margin-top: 8px; }
+.routine-start-visual > .icon { display: none; }
+.routine-start-visual .exercise-visual.mini { width: 48px; height: 48px; flex-basis: 48px; }
+.settings-module > details.card { padding: 0; margin-bottom: 12px; }
+.settings-module > details.card > summary { cursor: pointer; min-height: 72px; padding: 18px; font-size: 16px; font-weight: 650; line-height: 1.5; }
+.settings-module > details.card > summary > span { display: block; margin-top: 4px; color: var(--muted); font-size: 14px; font-weight: 400; }
+.settings-module .routine-content, .settings-module .backup-content { padding: 0 18px 20px; }
+.settings-section-title { font-size: 17px; font-weight: 650; margin: 28px 0 12px; }
+.button:active:not(:disabled), .weight-step:active:not(:disabled), .routine-start-card:active:not(:disabled) { filter: brightness(.9); }
+button, summary { scroll-margin-block: 20px 110px; }
+input, select, textarea { scroll-margin-block: 24px 120px; }
+@media (min-width: 681px) {
+  .start-routines { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1000px) {
+  .start-routines { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .site-header { min-height: 58px; }
+  .brand { font-size: 29px; }
+  .module-nav { gap: 8px; background: var(--surface); }
+  .module-nav > button { min-height: 56px; }
+  .module-nav > button[aria-current="page"] { color: var(--accent); background: var(--soft); }
+  .focus-card { padding: 18px; }
+  .training-layout { gap: 18px; }
+  .training-sidebar .session-progress { padding: 14px 16px; margin-bottom: 12px; }
+  .module-title { margin-top: 22px; }
+}

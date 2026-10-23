@@ -1,4 +1,5 @@
 import SessionSummary from './SessionSummary';
+import WeightAdjustments from './WeightAdjustments';
 import { pendiente } from './execution';
 import AdvancedSetForm from './AdvancedSetForm';
 import { resuelta, grupoDe, turnosTrabajo } from './execution';
@@ -77,7 +78,7 @@ export default function TrainingScreen(p: Props) {
   const notaConfirmada = notaDeSesion(sesion, ejercicio.id);
   const ultimaConfirmada = sesion.series.at(-1);
   const contextoNota = { sesionId: sesion.id, ejercicioId: ejercicio.id, base: JSON.stringify([sesion.fecha, sesion.finalizadaEn ?? null, ejercicio.montaje ?? null, notaConfirmada ?? null]) };
-  const montaje = <><ExerciseReference ejercicio={ejercicio} /><SetupNotes key={`${sesion.id}:${ejercicio.id}`} montaje={ejercicio.montaje} nota={notaConfirmada} contexto={contextoNota} habilitado={p.notaHabilitada} onGuardar={p.onGuardarNota} onEdicion={p.onEdicionNota} /></>;
+  const montaje = <SetupNotes key={`${sesion.id}:${ejercicio.id}`} montaje={ejercicio.montaje} nota={notaConfirmada} contexto={contextoNota} habilitado={p.notaHabilitada} onGuardar={p.onGuardarNota} onEdicion={p.onEdicionNota} />;
   const resueltasActuales = realizadas(sesion,ejercicio.id).length;
   const serieExtra = ejercicio.seriesObjetivo !== null && resueltasActuales >= ejercicio.seriesObjetivo;
   const etiquetaSerie = serieExtra ? `Serie extra ${resueltasActuales - ejercicio.seriesObjetivo! + 1}` : `Serie ${resueltasActuales + 1}${ejercicio.seriesObjetivo ? ` de ${ejercicio.seriesObjetivo}` : ''}`;
@@ -85,7 +86,6 @@ export default function TrainingScreen(p: Props) {
 
   return <>
     <div className="workout-context"><div><h1 tabIndex={-1}>{sesion.nombre}</h1><p>{mostrarFecha(sesion.fecha)}</p></div>{sesion.fecha !== fechaLocal() && !sesion.finalizadaEn ? <button type="button" className="button secondary small" disabled={p.editando} onClick={p.onNuevo}>Entrenar hoy</button> : <span className="session-state">{sesion.finalizadaEn ? 'Finalizado' : 'En curso'}</span>}</div>
-    {!sesion.finalizadaEn && sesion.fecha && <p className="session-continuity">{ultimaConfirmada ? `Último registro confirmado: ${ejerciciosPorId.get(ultimaConfirmada.ejercicioId)?.nombre ?? 'Ejercicio'} · ${formatoResultado(ultimaConfirmada)}` : 'Todavía no hay series confirmadas en esta sesión.'}</p>}
     <div className="training-layout"><div className="training-primary">
     {sesion.fecha === null ? <section className="card completion-card"><h2>Registro anterior sin fecha</h2><p className="muted">Conservamos tus series para consulta. Para registrar nuevas, empezá un entrenamiento con tu rutina.</p><button type="button" className="button primary" onClick={p.onNuevo}>Elegir rutina <Icon nombre="arrow-right" /></button></section> : sesion.finalizadaEn ? <section className="card completion-card">
       <span className="completion-mark"><Icon nombre="check" /></span><h2>Sesión finalizada</h2><p className="muted">{sesion.series.length} series guardadas en {cantidades.size} ejercicios.</p>
@@ -95,20 +95,27 @@ export default function TrainingScreen(p: Props) {
     </section> : <SwipeExerciseCard {...gesto}>{animar => <>
       {identidad}
       {navegacion(animar)}
-      {montaje}{grupo && <p className="prescription-hint">{grupo.nombre} · ronda {turnosTrabajo(sesion,ejercicio.id)+1} de {grupo.rondas}</p>}
-      <div className="set-progress"><strong>{etiquetaSerie}</strong><span>{objetivo ? `Objetivo: ${textoReps(objetivo)}${objetivo.segundos === undefined ? " reps" : ""} · ${objetivo.rol ?? "trabajo (nuevo registro)"}` : 'A tu ritmo'}</span></div>
+      {grupo && <p className="prescription-hint">{grupo.nombre} · ronda {turnosTrabajo(sesion,ejercicio.id)+1} de {grupo.rondas}</p>}
+      <div className="set-progress"><strong>{etiquetaSerie}</strong><span>{objetivo ? `Objetivo: ${textoReps(objetivo)}${objetivo.segundos === undefined ? " reps" : ""}${objetivo.rol === 'calentamiento' ? ' · calentamiento' : ''}` : 'A tu ritmo'}</span></div>
       {objetivo && (objetivo.pesoKg !== undefined || objetivo.descansoSegundos !== undefined) && <p className="prescription-hint">{objetivo.pesoKg !== undefined && `Carga objetivo: ${objetivo.pesoKg.toLocaleString("es-AR")} kg. `}{objetivo.descansoSegundos !== undefined && `Descanso previsto: ${objetivo.descansoSegundos} s.`}</p>}{ejercicio.notas && <p className="exercise-notes">{ejercicio.notas}</p>}
-      <p className="weight-convention" id="criterio-peso"><strong>{etiquetaPeso(ejercicio)}</strong> · {ayudaPeso(ejercicio)}</p>
+      <p className="weight-convention" id="criterio-peso">{etiquetaPeso(ejercicio)}</p>
       {p.edicion}
       {(ejercicio.modalidad && ejercicio.modalidad !== 'repeticiones') || ejercicio.registrarRir ? !p.editando && <AdvancedSetForm key={`${ejercicio.id}:${series.length}:${JSON.stringify(abierta)}`} sesion={sesion} ejercicio={ejercicio} peso={p.peso} repeticiones={p.repeticiones} registro={abierta} disabled={inactivo} onGuardar={p.onResultado}/> : <form hidden={p.editando} onSubmit={evento => { evento.preventDefault(); p.onRegistrar(); }}>
-        <ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled={inactivo} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} onEditar={p.onEditar} />
-        <p className={`draft-status ${p.avisoBorrador ? 'draft-warning' : ''}`} role="status">{p.avisoBorrador || (p.hayBorrador ? p.borradorRecuperado ? 'Recuperamos tu borrador local. Revisá los valores: la serie todavía no está registrada.' : 'Borrador conservado en este dispositivo. La serie todavía no está registrada.' : 'Valores sugeridos. Tocá el botón de la fila para guardar la serie.')}</p>
+        <div className="fields focus-inputs">
+          <label>Peso <span>kg</span><input aria-describedby="criterio-peso referencia-carga" type="number" min="0" max="1000" step="0.01" inputMode="decimal" value={p.peso} onChange={e=>p.onPeso(e.target.value)} onFocus={e=>e.target.select()} required disabled={inactivo}/></label>
+          <label>Repeticiones<input type="number" min="1" max="100" step="1" inputMode="numeric" value={p.repeticiones} onChange={e=>p.onRepeticiones(e.target.value)} onFocus={e=>e.target.select()} required disabled={inactivo}/></label>
+        </div>
+        <WeightAdjustments disabled={inactivo} onIncrementar={p.onSumar} onCero={()=>p.onPeso('0')}/>
+        <button type="submit" className="button log-set" disabled={inactivo}>Guardar serie <Icon nombre="check"/></button>
+        <p className="inline-feedback" role="status" aria-live="polite" aria-atomic="true">{p.mensaje || 'Se guarda en este dispositivo, también sin conexión.'}</p>
+        {(p.avisoBorrador || p.hayBorrador) && <p className={`draft-status ${p.avisoBorrador ? 'draft-warning' : ''}`} role="status">{p.avisoBorrador || (p.borradorRecuperado ? 'Borrador recuperado. Revisá los valores antes de guardar.' : 'Borrador local; todavía no es una serie guardada.')}</p>}
         <p className="reference-line" id="referencia-carga">{objetivo?.pesoKg !== undefined ? 'Carga propuesta por el plan. Podés ajustarla a lo realizado.' : ultimo ? `Última serie: ${formatoResultado(ultimo)}` : p.referencia?.origen.startsWith('Primera') ? `Carga inicial anterior: ${p.referencia.pesoKg.toLocaleString('es-AR')} kg · podés ajustarla` : 'Sin carga anterior. Ajustá el peso antes de registrar.'}</p>
-        <details className="quiet-details weight-shortcuts"><summary>Ajustar peso con botones</summary>{[1, -1].map(signo => <div className="weight-controls" key={signo}>{[1.25, 5, 10, 20].map(valor => <button type="button" className="weight-step" key={valor} onClick={() => p.onSumar(signo * valor)} disabled={inactivo}>{signo === 1 ? '+' : '−'}{valor.toLocaleString('es-AR')} <span>kg</span></button>)}</div>)}<div className="weight-tools"><button type="button" onClick={() => p.onPeso('0')} disabled={inactivo}>Poner en 0</button></div></details>
-        <p className="inline-feedback" role="status" aria-live="polite" aria-atomic="true">{p.mensaje || 'Se guarda al confirmar, también sin conexión.'}</p>
       </form>}
-      {!ejercicio.registrarRir && (!ejercicio.modalidad || ejercicio.modalidad === 'repeticiones') && !p.editando && <details className="quiet-details"><summary>Registrar intento fallido o asistencia</summary><AdvancedSetForm key={`${ejercicio.id}:${series.length}`} sesion={sesion} ejercicio={ejercicio} peso={p.peso} repeticiones={p.repeticiones} disabled={inactivo} onGuardar={p.onResultado}/></details>}{series.length > 0 && !p.editando && !registroAvanzado && <p className="reference-line">Tocá el peso o las repeticiones de una serie guardada para corregirla.</p>}
-      <PrescribedSets ejercicio={ejercicio} /><PreviousExercise sesiones={p.sesiones} sesion={sesion} ejercicio={ejercicio} />
+      {!ejercicio.registrarRir && (!ejercicio.modalidad || ejercicio.modalidad === 'repeticiones') && !p.editando && <details className="quiet-details"><summary>Registrar intento fallido o asistencia</summary><AdvancedSetForm key={`${ejercicio.id}:${series.length}`} sesion={sesion} ejercicio={ejercicio} peso={p.peso} repeticiones={p.repeticiones} disabled={inactivo} onGuardar={p.onResultado}/></details>}{series.length > 0 && !p.editando && !registroAvanzado && <p className="reference-line">Para corregir un valor, abrí las series de este ejercicio.</p>}
+      {!registroAvanzado && series.length > 0 && !p.editando && <details className="quiet-details exercise-record"><summary>Series de este ejercicio · {series.length}</summary><ExerciseSets ejercicio={ejercicio} series={series} peso="" repeticiones="" disabled={p.bloqueado || !sesion.fecha} registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} onEditar={p.onEditar}/></details>}
+      {montaje}
+      <details className="quiet-details exercise-context"><summary>Objetivos, equipo y criterio de carga</summary><ExerciseReference ejercicio={ejercicio}/><p className="muted">{ayudaPeso(ejercicio)}</p><PrescribedSets ejercicio={ejercicio}/></details>
+      <PreviousExercise sesiones={p.sesiones} sesion={sesion} ejercicio={ejercicio} />
       {registroAvanzado && !p.editando && <>
         <p className="inline-feedback" role="status">{p.mensaje || 'Se guarda al confirmar; los avances abiertos todavía no completan la serie.'}</p>
         {series.length > 0 && <details className="quiet-details"><summary>Resultados de este ejercicio · {series.length}</summary><ExerciseSets ejercicio={ejercicio} series={series} peso="" repeticiones="" disabled={p.bloqueado || !sesion.fecha} registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} onEditar={p.onEditar}/></details>}
@@ -119,12 +126,13 @@ export default function TrainingScreen(p: Props) {
     {(sesion.finalizadaEn || sesion.fecha === null) && <SwipeExerciseCard {...gesto} className="reviewed-exercise">{animar => <>{identidad}{navegacion(animar)}{montaje}<p className="muted">{series.length ? `${series.length} series guardadas${ejercicio.seriesObjetivo ? ` · objetivo: ${ejercicio.seriesObjetivo} series` : ''}` : 'Sin series registradas en este ejercicio'}</p><p className="weight-convention"><strong>{etiquetaPeso(ejercicio)}</strong> · {ayudaPeso(ejercicio)}</p>{p.edicion}<div hidden={p.editando}><ExerciseSets ejercicio={ejercicio} series={series} peso={p.peso} repeticiones={p.repeticiones} disabled={p.bloqueado || p.editando} registrando={false} onPeso={p.onPeso} onRepeticiones={p.onRepeticiones} onEditar={p.onEditar} /></div><PrescribedSets ejercicio={ejercicio} /><PreviousExercise sesiones={p.sesiones} sesion={sesion} ejercicio={ejercicio} /></>}</SwipeExerciseCard>}
 
     </div><aside className="training-sidebar">
-    <SessionSummary sesion={sesion}/><div className="session-progress"><span>{conObjetivo ? `${completados} de ${conObjetivo} ejercicios completados` : `${cantidades.size} ejercicios registrados`}</span><span>{sesion.series.length} series</span>{conObjetivo > 0 && <progress value={completados} max={conObjetivo} aria-label="Ejercicios completados" />}</div>
+    <div className="session-progress"><span>{conObjetivo ? `${completados} de ${conObjetivo} ejercicios completados` : `${cantidades.size} ejercicios registrados`}</span><span>{sesion.series.length} series</span>{conObjetivo > 0 && <progress value={completados} max={conObjetivo} aria-label="Ejercicios completados" />}</div>
 
-    <RoutineOverview sesion={sesion} ejercicioId={ejercicio.id} cantidades={cantidades} disabled={p.editando} onElegir={id => {
+    <details className="quiet-details routine-navigation"><summary>Ver ejercicios del entrenamiento</summary><RoutineOverview sesion={sesion} ejercicioId={ejercicio.id} cantidades={cantidades} disabled={p.editando} onElegir={id => {
       p.onEjercicio(id);
       requestAnimationFrame(() => document.getElementById('ejercicio')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    }} />
+    }} /></details>
+    <details className="quiet-details"><summary>Resumen de esta sesión</summary><SessionSummary sesion={sesion}/>{ultimaConfirmada && <p className="session-continuity">Último registro confirmado: {ejerciciosPorId.get(ultimaConfirmada.ejercicioId)?.nombre} · {formatoResultado(ultimaConfirmada)}</p>}</details>
 
     </aside><div className="training-secondary">
     <details className="card session-record" open={registroAbierto} onToggle={e => setRegistroAbierto(e.currentTarget.open)}>

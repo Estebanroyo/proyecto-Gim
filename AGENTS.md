@@ -36,3 +36,10 @@ El producto es una bitácora personal para usar durante un entrenamiento en el g
 - Conservar IDs R00–R02, F01–F24 y las decisiones Dxx al registrar avances. Propuesta, implementado, compilado, validado en uso y publicado son estados distintos.
 - Al cerrar un corte, actualizar el estado con cambios reales, evidencia, decisiones pendientes y siguiente acción exacta. No marcar funcionalidad como existente por figurar en la hoja de ruta.
 - La planificación documental no autoriza por sí sola implementar todo el backlog ni publicarlo. Las instrucciones posteriores del usuario prevalecen sobre el plan.
+
+## UI UX Pro Max · prioridad de diseño móvil
+
+- Skill solicitada por el usuario desde https://uupm.cc/, instalada en `~/.codex/skills/ui-ux-pro-max/SKILL.md` desde el repositorio oficial enlazado por ese sitio.
+- Para el rediseño, usar UI UX Pro Max como referencia principal y `design-system/gim/MASTER.md` como adaptación canónica al producto. Impeccable Operate sigue como apoyo, sin imponer otra dirección sobre este pedido.
+- No aplicar patrones de landing, fuentes remotas, gamificación o dependencias por aparecer en una búsqueda genérica. Verificar ajuste a registro de entrenamiento en celular, con una acción principal y detalles a pedido.
+- La rama `feat/mobile-clarity-uupm` separa el rediseño de la versión base publicada. No fusionar en main ni publicar el rediseño por el solo hecho de estar compilado.
