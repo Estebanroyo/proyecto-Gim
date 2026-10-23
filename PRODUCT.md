@@ -22,7 +22,7 @@ La app debe recuperar el último entrenamiento y ejercicio utilizados. En una se
 
 ## Capabilities and Constraints
 
-- React, TypeScript, Vite y vite-plugin-pwa; versión local 0.21.0 en rama feat/mobile-clarity-uupm. La base 0.20.1 está publicada en main; el rediseño no se desplegó.
+- React, TypeScript, Vite y vite-plugin-pwa; versión local 0.21.1 en rama feat/mobile-clarity-uupm. La base 0.20.1 está publicada en main; el rediseño no se desplegó.
 - Tres áreas: Entrenar, Historial y Configuración. Una acción principal para registrar; preparación y opciones avanzadas desplegables.
 - Guardado local antes de confirmar/avanzar, con borradores recuperables separados de resultados. Sin backend, cuenta ni sincronización automática.
 - Una sesión por rutina/fecha. Cada sesión copia ejercicios, objetivos, equipo y montaje. Editar plantillas o aceptar progresión solo cambia futuro.

@@ -41,3 +41,13 @@ Sin dependencias, fuentes remotas, nuevos medios ni animaciones añadidas. La na
 ## Próxima revisión
 
 Evaluar el recorrido real de una serie en teléfono: localizar ejercicio/objetivo, ajustar carga, confirmar y pasar al siguiente turno. Corregir el primer hallazgo concreto. Mantener el rediseño en su rama hasta decidir su integración; el pedido de publicar la base no equivale a publicar el nuevo diseño.
+
+Evidencia final local: 71 módulos; JS 413.12 kB (gzip 120.59), CSS 39.81 kB (gzip 8.16), PWA 18 entradas/723.06 KiB. Rama remota guardada en 5dee11612b773c5493f703b8650a0cc9da79b97c; main conserva 1e4203c. Estado de uso sin cambios: no validado en teléfono.
+
+## 0.21.1 · Confirmación y regreso al descanso
+
+Después de persistir correctamente, SaveFeedback muestra una confirmación breve con ejercicio y estado. La aparición del aviso (160 ms) y el desplazamiento nativo suave al ancla del temporizador comienzan juntos en el primer frame tras guardar. A los 1200 ms empieza a desvanecerse durante 800 ms. El temporizador empieza al guardar, sin esperar la animación. Se retira el teclado de un campo del formulario antes de calcular el destino; se respeta el espacio de la navegación fija.
+
+`Rest.iniciar` informa si efectivamente creó descanso. Sin descanso no hay desplazamiento; al completar toda la sesión el destino es el resumen superior. Correcciones y avances abiertos confirman sin reiniciar descanso ni mover la pantalla. Un error de guardado no muestra éxito. Tocar, escribir o desplazar manualmente cancela el desplazamiento pendiente; navegar a otra sesión/área desmonta y cancela temporizadores. Nuevos guardados reemplazan el aviso anterior, sin acumular cola. Con movimiento reducido se posiciona sin animación y conserva el aviso legible 2200 ms.
+
+Sin cambios de datos ni dependencias. Patrón contrastado con [Material 3: Snackbar](https://m3.material.io/components/snackbar/overview) y [MDN: scrollIntoView](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView), además de las coincidencias Submit Feedback/Confirmation Messages de UI UX Pro Max. Compilación/PWA correctas, 72 módulos, JS414.97kB/gzip121.31, CSS40.86kB/gzip8.38; detector estático sin hallazgos. Sin tests, automatización de navegador ni validación táctil. Cambio en rama de rediseño, sin desplegar en main.

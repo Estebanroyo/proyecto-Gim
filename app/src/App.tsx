@@ -1,4 +1,6 @@
 import PlanLibrary from './PlanLibrary';
+import SaveFeedback from './SaveFeedback';
+import type { SaveNotice } from './SaveFeedback';
 import HistoryManagement from './HistoryManagement';
 import ProgressionPanel from './ProgressionPanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -61,6 +63,7 @@ export default function App() {
   });
   const [error, setError] = useState(errorCarga);
   const [mensaje, setMensaje] = useState('');
+  const [avisoGuardado, setAvisoGuardado] = useState<SaveNotice | null>(null);
   const [nuevoAbierto, setNuevoAbierto] = useState(!inicio.sesionId);
   const [modulo, setModulo] = useState<'entrenar' | 'historial' | 'configuracion'>('entrenar');
   const [visitados, setVisitados] = useState({ historial: false, configuracion: false });
@@ -75,6 +78,8 @@ export default function App() {
   const [repeticionesEditadas, setRepeticionesEditadas] = useState('');
   const botonEdicion = useRef<HTMLButtonElement | null>(null);
   const formularioSerie = useRef<HTMLDivElement | null>(null);
+  const anclaDescanso = useRef<HTMLDivElement | null>(null);
+  useEffect(() => { setAvisoGuardado(null); }, [modulo, seleccionado, nuevoAbierto]);
   const entrenamientos = useMemo(() => sesionesPorFecha(registro.entrenamientos), [registro.entrenamientos]);
   const activo = registro.entrenamientos.find(sesion => sesion.id === seleccionado);
   const ejercicio = activo?.ejercicios.find(item => item.id === ejercicioId) ?? activo?.ejercicios[0];
@@ -196,6 +201,7 @@ export default function App() {
   }
 
   function confirmarResultado(entrada: Omit<SerieEjercicio,'ejercicioId'>, correccion = false): ResultadoGuardado {
+    setAvisoGuardado(null);
     if (!puedeEscribir || !activo?.fecha || !ejercicio || activo.finalizadaEn && !correccion) return {ok:false,error:'No se puede registrar ahora.'};
     try {
       let nuevo = correccion ? { ...registro, entrenamientos: registro.entrenamientos.map(s=>s.id===activo.id?{...s,series:s.series.map(x=>x.id===entrada.id?{...entrada,ejercicioId:ejercicio.id,objetivoId:x.objetivoId,rol:x.rol}:x)}:s) } : registrarSerie(registro,activo.id,ejercicio.id,entrada);
@@ -207,13 +213,14 @@ export default function App() {
       const guardado=persistir(nuevo);
       if(!guardado.ok)return guardado;
       setError('');
-      if(correccion){ setEdicion(null);setMensaje('Corrección guardada; objetivo y descanso conservados.');return {ok:true}; }
+      if(correccion){ setEdicion(null);setMensaje('Corrección guardada; objetivo y descanso conservados.');setAvisoGuardado({id:crypto.randomUUID(),titulo:'Corrección guardada',detalle:ejercicio.nombre,destino:null});return {ok:true}; }
       if(resuelta(resultado)){
-        rest.iniciar(activo,sesion,ejercicio,resultado,objetivoActual(activo,ejercicio));
+        const conDescanso = rest.iniciar(activo,sesion,ejercicio,resultado,objetivoActual(activo,ejercicio));
         const aviso=quitarBorrador(activo,ejercicio);setHayBorrador(false);setBorradorRecuperado(false);setAvisoBorrador(aviso);
         if(siguiente)prepararFormulario(siguiente,activo.id,nuevo,false);
         setMensaje(terminado?'Sesión finalizada; resultados conservados.':siguiente&&siguiente.id!==ejercicio.id?`Registro guardado. Seguís con ${siguiente.nombre}.`:'Resultado guardado.');
-      }else setMensaje('Avance guardado. La serie sigue abierta hasta que la cierres.');
+        setAvisoGuardado({id:crypto.randomUUID(),titulo:terminado?'Entrenamiento finalizado':'Serie guardada',detalle:`${ejercicio.nombre}${conDescanso?' · Descanso en marcha':terminado?' · Resultados conservados':''}`,destino:conDescanso?'descanso':terminado?'cierre':null});
+      }else {setMensaje('Avance guardado. La serie sigue abierta hasta que la cierres.');setAvisoGuardado({id:crypto.randomUUID(),titulo:'Avance guardado',detalle:'La serie sigue abierta hasta que la cierres.',destino:null});}
       return {ok:true};
     }catch(problema){return {ok:false,error:problema instanceof Error?problema.message:'No se pudo guardar el resultado.'};}
   }
@@ -326,7 +333,7 @@ export default function App() {
     <div className="app-shell">
       <header className="site-header">
         <button className="brand" type="button" aria-label="GIM, volver al entrenamiento" disabled={edicionActiva} onClick={() => cambiarModulo('entrenar')}><img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width="32" height="32" />GIM<span>BITÁCORA</span></button>
-        <span className="local-label">Personal · v0.21.0</span>
+        <span className="local-label">Personal · v0.21.1</span>
       </header>
       {actualizacion && <div className="app-update-banner" role="status"><span>Hay una versión nueva de GIM lista para aplicar.</span><button type="button" className="button secondary small" disabled={edicionActiva || rutinaEnEdicion} onClick={() => { cambiarModulo('configuracion'); requestAnimationFrame(() => document.getElementById('instalacion-conexion')?.scrollIntoView({ block: 'center' })); }}>Ver actualización</button></div>}
       <nav className="module-nav" aria-label="Secciones de la aplicación">
@@ -351,7 +358,7 @@ export default function App() {
             {!rutinas.length && <div className="card empty-state"><h2>Prepará tu primera rutina</h2><p>Podés crearla desde Configuración.</p><button type="button" className="button" onClick={() => cambiarModulo('configuracion')}>Crear mi rutina</button></div>}
             <p className="start-footnote">Las series se guardan en este dispositivo, también sin conexión.</p>
           </> : <div ref={formularioSerie}>
-            <RestPanel rest={rest} /><TrainingScreen key={activo.id} sesion={activo} ejercicio={ejercicio} series={series} peso={peso} repeticiones={repeticiones}
+            <div ref={anclaDescanso} className="rest-anchor"><RestPanel rest={rest}/></div><TrainingScreen key={activo.id} sesion={activo} ejercicio={ejercicio} series={series} peso={peso} repeticiones={repeticiones}
               bloqueado={!puedeEscribir || !activo.fecha} editando={edicionActiva} referencia={sugerencia}
               onPeso={valor => actualizarBorrador(valor, repeticiones)} onRepeticiones={valor => actualizarBorrador(peso, valor)} onSumar={ajustarPeso} onRegistrar={registrar} onResultado={confirmarResultado}
               onEjercicio={elegirEjercicio} onNuevo={() => setNuevoAbierto(true)} onEditar={iniciarEdicion}
@@ -403,6 +410,7 @@ export default function App() {
         </section>
       </main>
       <footer>GIM · Hecho para entrenar, serie a serie.</footer>
+      {avisoGuardado && modulo === 'entrenar' && !nuevoAbierto && <SaveFeedback key={avisoGuardado.id} aviso={avisoGuardado} descanso={anclaDescanso} entrenamiento={formularioSerie}/>}
     </div>
   );
 }

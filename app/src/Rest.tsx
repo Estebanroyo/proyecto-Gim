@@ -31,8 +31,8 @@ export function useRest() {
     catch { setAviso('No se pudo guardar la preferencia de descanso.'); }
   }
   function iniciar(antes: Sesion, despues: Sesion, e: EjercicioPlan, resultado: SerieEjercicio, objetivo?: ObjetivoSerie) {
-    if (!resuelta(resultado) || estado?.serieId === resultado.id) return;
-    if (despues.finalizadaEn || !ajustes.activo) { guardar(null); return; }
+    if (!resuelta(resultado) || estado?.serieId === resultado.id) return false;
+    if (despues.finalizadaEn || !ajustes.activo) { guardar(null); return false; }
     let segundos = objetivo?.descansoSegundos ?? e.descansoSegundos ?? ajustes.segundos;
     const grupo = grupoDe(despues, e.id);
     if (grupo && resultado.rol === 'calentamiento') segundos = objetivo?.descansoSegundos ?? 0;
@@ -40,11 +40,12 @@ export function useRest() {
       const miembros = grupo.miembros.map(id => despues.ejercicios.find(x => x.id === id)!).filter(x => !despues.pospuestos?.includes(x.id) && !despues.omisiones?.some(o => o.ejercicioId === x.id));
       const rondaAntes = Math.min(...miembros.map(x => turnosTrabajo(antes, x.id)));
       const cerrada = miembros.every(x => turnosTrabajo(despues, x.id) > rondaAntes || !pendiente(despues, x));
-      if (!cerrada) { guardar(null); return; }
+      if (!cerrada) { guardar(null); return false; }
       segundos = grupo.descansoSegundos ?? segundos;
     }
-    if (segundos === 0) { guardar(null); return; }
+    if (segundos === 0) { guardar(null); return false; }
     guardar({ sesionId: despues.id, serieId: resultado.id, nombre: grupo?.nombre ?? e.nombre, fin: Date.now() + segundos * 1000 });
+    return true;
   }
   return { estado, ajustes, aviso, iniciar, configurar, omitir: () => guardar(null),
     pausa: () => { const restante = restanteDe(estado); if (estado && restante > 0) guardar({ ...estado, pausado: restante }); },
