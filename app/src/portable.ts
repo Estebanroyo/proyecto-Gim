@@ -1,0 +1,13 @@
+import type { EjercicioPlan, RutinaDia } from './training';
+import { validarRutinas } from './training';
+export function copiarPlan(plan:RutinaDia,titulo=plan.titulo):RutinaDia{
+ const copia=structuredClone(plan),ids=new Map(copia.ejercicios.map(e=>[e.id,crypto.randomUUID()]));
+ function ejercicio(e:EjercicioPlan):EjercicioPlan{return {...e,id:crypto.randomUUID(),...(e.objetivosSerie?{objetivosSerie:e.objetivosSerie.map(o=>({...o,id:crypto.randomUUID()}))}:{}),...(e.alternativas?{alternativas:e.alternativas.map(ejercicio)}:{})};}
+ return {...copia,id:crypto.randomUUID(),titulo:titulo.trim(),ejercicios:copia.ejercicios.map(e=>({...ejercicio(e),id:ids.get(e.id)!})),...(copia.grupos?{grupos:copia.grupos.map(g=>({...g,id:crypto.randomUUID(),miembros:g.miembros.map(id=>ids.get(id)!)}))}:{})};
+}
+export function planPortatil(plan:RutinaDia,notas=false):RutinaDia{
+ return {id:plan.id,titulo:plan.titulo,ejercicios:plan.ejercicios.map(e=>({id:e.id,nombre:e.nombre,grupo:e.grupo,seriesObjetivo:e.seriesObjetivo,repeticionesObjetivo:e.repeticionesObjetivo,notas:notas?e.notas:null,...(e.criterioPeso?{criterioPeso:e.criterioPeso}:{}),...(e.criterioReps?{criterioReps:e.criterioReps}:{}),...(e.varianteId?{varianteId:e.varianteId}:{}),...(e.modalidad?{modalidad:e.modalidad}:{}),...(e.objetivosSerie?{objetivosSerie:structuredClone(e.objetivosSerie)}:{}),...(e.descansoSegundos!==undefined?{descansoSegundos:e.descansoSegundos}:{}),...(e.registrarRir!==undefined?{registrarRir:e.registrarRir}:{}),...(e.omitible!==undefined?{omitible:e.omitible}:{}),...(e.progresion?{progresion:{...e.progresion}}:{}),...(notas&&e.montaje?{montaje:{...e.montaje}}:{})})),...(plan.grupos?{grupos:structuredClone(plan.grupos)}:{})};
+}
+export function exportarPlan(plan:RutinaDia,notas=false):string{return JSON.stringify({aplicacion:'gim-plan',formatoPlan:1,plan:planPortatil(plan,notas)},null,2);}
+export function leerPlan(texto:string):RutinaDia{if(new TextEncoder().encode(texto).length>2*1024*1024)throw new Error('El plan supera 2 MB.');let dato;try{dato=JSON.parse(texto);}catch{throw new Error('JSON de plan inválido.');}if(!dato||dato.aplicacion!=='gim-plan'||dato.formatoPlan!==1||Object.keys(dato).some(k=>!['aplicacion','formatoPlan','plan'].includes(k)))throw new Error('Elegí un archivo de plan portátil; un respaldo se importa desde Respaldo.');validarRutinas([dato.plan]);return dato.plan;}
+export function descargarArchivo(nombre:string,texto:string,tipo='application/json'){const url=URL.createObjectURL(new Blob([texto],{type:tipo}));const a=document.createElement('a');a.href=url;a.download=nombre;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}

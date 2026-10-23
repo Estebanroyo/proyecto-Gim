@@ -1,50 +1,38 @@
 # GIM · Bitácora personal de entrenamiento
 
-PWA para seguir rutinas y registrar series, peso y repeticiones desde el gimnasio. React, TypeScript, Vite y vite-plugin-pwa. Versión 0.12.
+PWA personal para seguir rutinas y registrar lo realizado en el gimnasio, con prioridad de uso en celular. Versión 0.20.1. React, TypeScript, Vite y vite-plugin-pwa.
 
-## Desarrollo
+## Usar y ejecutar
 
-Requiere Node.js 24 y pnpm 11.25.0.
+[Página pública](https://estebanroyo.github.io/proyecto-Gim/) · [Estado de publicación](https://github.com/Estebanroyo/proyecto-Gim/actions/workflows/deploy.yml).
 
 ```sh
 pnpm --dir app install --frozen-lockfile
 pnpm --dir app dev
-```
-
-## Compilación
-
-```sh
 pnpm --dir app build
 pnpm --dir app preview
 ```
 
-La compilación genera `app/dist`. El preview es local, no un servidor de producción. No se ejecutan tests en el flujo de publicación.
+Requiere Node.js 24 y pnpm 11.25.0. Build compila producción y genera la PWA; no ejecuta tests. Preview local: http://127.0.0.1:5175/.
 
-## Publicación
+## Capacidades
 
-Workflow preparado para GitHub Pages: `.github/workflows/deploy.yml`. Hay que habilitar GitHub Actions como fuente en Settings → Pages. La disponibilidad depende de la visibilidad y el plan del repositorio.
+- Entrenar, Historial y Configuración; rutinas reutilizables y copia independiente del plan por sesión.
+- Registro local, borradores, correcciones, sugerencia de carga inicial y objetivos por serie.
+- Calentamiento/trabajo/fallo explícito, descansos persistentes, grupos simples y adaptación de sesión.
+- Registro opcional de RIR, asistencia, lados, tramos, duración y cardio manual.
+- Biblioteca local, equipo concreto, montaje habitual, bloques reutilizables y planes portátiles.
+- CSV propio con vista previa, respaldo completo y detección de conflictos.
+- Historial contextual, propuesta de progresión optativa y limpieza recuperable de entrenamientos.
 
-URL prevista después del despliegue: https://estebanroyo.github.io/proyecto-Gim/
+Detalle, combinaciones soportadas y contratos de datos en [entrega principal](docs/entrega-0.20-ruta-principal.md). [Estado técnico](docs/estado-desarrollo-gim.md) · [Producto](PRODUCT.md) · [Diseño](DESIGN.md).
 
-Ver [configuración y límites del despliegue](docs/despliegue.md).
+## Datos y límites
 
-## Funcionamiento
+Registro v5 bajo la clave histórica única, lectores anteriores y respaldo 3. Las sesiones conservan sus copias; no se completan retrospectivamente roles, equipos o criterios desconocidos. Offline requiere preparar recursos con conexión. Instalar no equivale a respaldo ni sincronización.
 
-- Entrenar, Historial y Configuración separados.
-- Rutinas reutilizables y copia de objetivos por sesión.
-- Registro local por serie y avance al siguiente ejercicio.
-- Sugerencia de carga desde la primera serie del entrenamiento anterior.
-- Editor de rutinas y respaldo JSON con validación.
-- Acceso offline después de preparar la aplicación con conexión.
-- Reinicio de una sesión con confirmación explícita para repetir el flujo.
-- Navegación por ejercicios con anterior/siguiente y gesto lateral, también al revisar sesiones finalizadas. Tabla sin scroll interno en móvil.
-- Guardado junto a los campos, corrección al tocar una serie y borrador local separado del registro confirmado.
-- Criterio de peso por ejercicio, consulta de series anteriores y comparación a la misma carga. Frecuencia semanal en Historial.
+Sin cuenta, backend ni sincronización automática. Cada navegador/perfil/origen conserva sus propios datos; pasar al teléfono requiere respaldo manual. Publicar el código no publica los entrenamientos del navegador. La recuperación de limpieza es local y no forma parte del respaldo completo activo.
 
-Ver [revisión de uso y límites de v0.12](docs/revision-uso-v0.12.md).
+La implementación está compilada, pero la aceptación integral y ergonomía física siguen pendientes. No se realizaron tests ni automatización de escenarios para esta entrega. Los fixtures de tests históricos se conservan fuera de la compilación de producción y no son cobertura del contrato actual.
 
-No hay cuentas, backend ni sincronización automática. Cambiar de origen o dispositivo requiere exportar e importar un respaldo desde Configuración. No se publican datos de entrenamientos al subir el código.
-
-Los recursos gráficos y fuentes son locales. La licencia OFL de Barlow Condensed se incluye en `app/public/fonts/OFL.txt`.
-
-[Contexto de producto](PRODUCT.md) · [Diseño](DESIGN.md)
+GitHub Pages se publica desde main mediante Actions; el rediseño se trabaja por separado. [Despliegue](docs/despliegue.md). Recursos gráficos y fuentes locales; licencia OFL en app/public/fonts/OFL.txt.

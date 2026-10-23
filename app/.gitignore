@@ -4,3 +4,11 @@ dist/
 .env.*
 !.env.example
 *.local
+gim-respaldo-*.json
+*.xlsx
+*.xls
+~$*
+
+gim-plan*.json
+gim-bloque*.json
+gim-plan.csv

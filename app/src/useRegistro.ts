@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { claveEntrenamientos, claveSeries } from './workout';
 import { claveRegistroActual } from './training';
 import type { RegistroActual } from './training';
-import { ConflictoRegistro, escribirRegistro, hayCambiosExternos, leerRegistro } from './storage';
+import { ConflictoRegistro, TransicionRegistro, escribirRegistro, hayCambiosExternos, leerRegistro } from './storage';
 import type { Instantanea } from './storage';
 
 export type ResultadoGuardado = { ok: true } | { ok: false; error: string };
@@ -11,7 +11,7 @@ function cargar() {
   try {
     return { instantanea: leerRegistro(localStorage), error: '' };
   } catch {
-    const instantanea: Instantanea = { registro: { version: 3, entrenamientos: [] }, textoBase: null, v2: null, v1: null };
+    const instantanea: Instantanea = { registro: { version: 5, entrenamientos: [] }, textoBase: null, v2: null, v1: null };
     return { instantanea, error: 'No se pudo leer un registro válido. No reemplazamos los datos guardados. Las altas quedan deshabilitadas para protegerlos.' };
   }
 }
@@ -44,7 +44,7 @@ export function useRegistro() {
       if (problema instanceof ConflictoRegistro) setCambioExterno(true);
       return {
         ok: false,
-        error: problema instanceof ConflictoRegistro ? problema.message : 'No se pudo guardar. El cambio no se aplicó; revisá el almacenamiento e intentá nuevamente.',
+        error: problema instanceof ConflictoRegistro || problema instanceof TransicionRegistro ? problema.message : 'No se pudo guardar. El cambio no se aplicó; revisá el almacenamiento e intentá nuevamente.',
       };
     }
   }

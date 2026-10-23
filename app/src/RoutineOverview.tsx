@@ -22,7 +22,7 @@ export default function RoutineOverview({ sesion, ejercicioId, cantidades, disab
       const realizadas = cantidades.get(ejercicio.id) ?? 0;
       const completo = ejercicio.seriesObjetivo !== null && realizadas >= ejercicio.seriesObjetivo;
       const actual = ejercicio.id === ejercicioId;
-      const estado = completo ? 'Completado' : sesion.finalizadaEn ? realizadas ? 'Registro parcial' : 'Sin realizar' : actual ? 'Ahora' : realizadas ? 'En curso' : 'Pendiente';
+      const estado = sesion.omisiones?.some(o=>o.ejercicioId===ejercicio.id) ? 'Omitido (conserva registros)' : sesion.pospuestos?.includes(ejercicio.id) ? 'Pospuesto' : completo ? 'Completado' : sesion.finalizadaEn ? realizadas ? 'Registro parcial' : 'Sin realizar' : actual ? 'Ahora' : realizadas ? 'En curso' : 'Pendiente';
       return <li key={ejercicio.id}><button className={`routine-exercise ${actual ? 'is-current' : ''} ${completo ? 'is-done' : ''}`} type="button" aria-current={actual ? 'step' : undefined} disabled={disabled} onClick={() => onElegir(ejercicio.id)}>
         <ExerciseVisual ejercicio={ejercicio} mini />
         <span className="routine-exercise-copy"><strong>{ejercicio.nombre}</strong><span>{realizadas}/{ejercicio.seriesObjetivo ?? '—'} series · {estado}</span></span>

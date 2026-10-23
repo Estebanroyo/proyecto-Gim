@@ -3,7 +3,7 @@ import type { EjercicioPlan, Sesion } from './training';
 type Borrador = { base: string; peso: string; repeticiones: string };
 const prefijo = 'gim.app.borrador-serie.v1.';
 const clave = (sesion: Sesion, ejercicio: EjercicioPlan) => `${prefijo}${encodeURIComponent(sesion.id)}.${encodeURIComponent(ejercicio.id)}`;
-const base = (sesion: Sesion, ejercicio: EjercicioPlan) => JSON.stringify([sesion.finalizadaEn ?? null, ejercicio.criterioPeso ?? null, sesion.series.filter(s => s.ejercicioId === ejercicio.id).map(s => [s.id, s.pesoKg, s.repeticiones])]);
+const base = (sesion: Sesion, ejercicio: EjercicioPlan) => JSON.stringify([sesion.finalizadaEn ?? null, ejercicio.criterioPeso ?? null, sesion.series.filter(s => s.ejercicioId === ejercicio.id).map(s => [s.id, s.pesoKg, s.repeticiones]), ...(ejercicio.objetivosSerie ? [ejercicio.objetivosSerie] : [])]);
 
 export function leerBorrador(sesion: Sesion, ejercicio: EjercicioPlan): { borrador: Borrador | null; aviso: string } {
   if (sesion.finalizadaEn || !sesion.fecha) return { borrador: null, aviso: '' };

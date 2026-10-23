@@ -1,34 +1,14 @@
 import { recuperarRegistroActual } from './training.ts';
-import type { RegistroActual, RutinaDia, Sesion } from './training';
+import type { RegistroActual, Sesion } from './training';
 
 export const limiteRespaldoBytes = 2 * 1024 * 1024;
 
-function copiarSesion(sesion: Sesion): Sesion {
-  return {
-    id: sesion.id, fecha: sesion.fecha, nombre: sesion.nombre,
-    ...(sesion.finalizadaEn ? { finalizadaEn: sesion.finalizadaEn } : {}),
-    rutinaOrigen: sesion.rutinaOrigen ? { id: sesion.rutinaOrigen.id, titulo: sesion.rutinaOrigen.titulo } : null,
-    ejercicios: sesion.ejercicios.map(ejercicio => ({
-      id: ejercicio.id, nombre: ejercicio.nombre, grupo: ejercicio.grupo,
-      seriesObjetivo: ejercicio.seriesObjetivo, repeticionesObjetivo: ejercicio.repeticionesObjetivo, notas: ejercicio.notas,
-      ...(ejercicio.criterioPeso ? { criterioPeso: ejercicio.criterioPeso } : {}),
-    })),
-    series: sesion.series.map(serie => ({ id: serie.id, pesoKg: serie.pesoKg, repeticiones: serie.repeticiones, ejercicioId: serie.ejercicioId, ...(serie.registradaEn ? { registradaEn: serie.registradaEn } : {}) })),
-  };
-}
-
 function copiaValidada(registro: RegistroActual): RegistroActual {
-  const validado = recuperarRegistroActual(JSON.stringify(registro), null, null);
-  return { version: 3, entrenamientos: validado.entrenamientos.map(copiarSesion), ...(validado.rutinas ? { rutinas: validado.rutinas.map(copiarRutina) } : {}) };
+  return structuredClone(recuperarRegistroActual(JSON.stringify(registro), null, null));
 }
-
-function copiarRutina(rutina: RutinaDia): RutinaDia {
-  return { id: rutina.id, titulo: rutina.titulo, ejercicios: rutina.ejercicios.map(e => ({ id: e.id, nombre: e.nombre, grupo: e.grupo, seriesObjetivo: e.seriesObjetivo, repeticionesObjetivo: e.repeticionesObjetivo, notas: e.notas, ...(e.criterioPeso ? { criterioPeso: e.criterioPeso } : {}) })) };
-}
-
 export function crearRespaldo(registro: RegistroActual, exportadoEn = new Date().toISOString()): string {
   if (Number.isNaN(Date.parse(exportadoEn))) throw new Error('La fecha del respaldo no es válida.');
-  const texto = JSON.stringify({ aplicacion: 'gim-bitacora', formatoRespaldo: 1, exportadoEn, datos: copiaValidada(registro) }, null, 2);
+  const texto = JSON.stringify({ aplicacion: 'gim-bitacora', formatoRespaldo: 3, exportadoEn, datos: copiaValidada(registro) }, null, 2);
   if (new TextEncoder().encode(texto).length > limiteRespaldoBytes) throw new Error('El registro supera el límite de respaldo de 2 MB de esta versión.');
   return texto;
 }
@@ -40,11 +20,13 @@ export function leerRespaldo(texto: string): RegistroActual {
   catch { throw new Error('El archivo no contiene JSON válido.'); }
   if (typeof archivo !== 'object' || archivo === null || Array.isArray(archivo) ||
     !('aplicacion' in archivo) || archivo.aplicacion !== 'gim-bitacora' ||
-    !('formatoRespaldo' in archivo) || archivo.formatoRespaldo !== 1 ||
+    !('formatoRespaldo' in archivo) || ![1, 2, 3].includes(archivo.formatoRespaldo as number) ||
     !('exportadoEn' in archivo) || typeof archivo.exportadoEn !== 'string' || Number.isNaN(Date.parse(archivo.exportadoEn)) ||
     !('datos' in archivo) || archivo.datos === null) {
     throw new Error('No es un respaldo compatible de GIM.');
   }
+  const datos = archivo.datos as { version?: unknown };
+  if ((archivo.formatoRespaldo === 1 && datos.version !== 3) || (archivo.formatoRespaldo === 2 && datos.version !== 4) || (archivo.formatoRespaldo === 3 && datos.version !== 5)) throw new Error('La versión de los datos no corresponde al formato del respaldo.');
   try { return copiaValidada(archivo.datos as RegistroActual); }
   catch { throw new Error('El respaldo contiene entrenamientos o referencias inválidas. No se importó nada.'); }
 }
@@ -54,6 +36,7 @@ export type AnalisisImportacion = {
   nuevas: number;
   identicas: number;
   rutinasNuevas: number;
+  bloquesNuevos: number;
   conflictos: string[];
 };
 
@@ -67,6 +50,13 @@ export function analizarImportacion(actual: RegistroActual, entrante: RegistroAc
   let identicas = 0;
   const rutinas = [...(base.rutinas ?? [])];
   let rutinasNuevas = 0;
+  let bloquesNuevos = 0;
+  const bloques = [...(base.bloques ?? [])];
+  for (const b of archivo.bloques ?? []) {
+    const existente = bloques.find(x => x.id === b.id);
+    if (existente && JSON.stringify(existente) !== JSON.stringify(b)) conflictos.push('Bloque con el mismo ID y contenido distinto: ' + b.titulo);
+    else if (!existente) { bloques.push(b); bloquesNuevos++; }
+  }
   for (const rutina of archivo.rutinas ?? []) {
     const existente = rutinas.find(r => r.id === rutina.id);
     if (existente && JSON.stringify(existente) !== JSON.stringify(rutina)) conflictos.push(`Rutina «${rutina.titulo}»: el plan difiere del existente.`);
@@ -85,5 +75,5 @@ export function analizarImportacion(actual: RegistroActual, entrante: RegistroAc
       nuevas.push(sesion);
     }
   }
-  return { registro: conflictos.length > 0 ? base : { ...base, entrenamientos: [...nuevas, ...base.entrenamientos], ...(base.rutinas || archivo.rutinas ? { rutinas } : {}) }, nuevas: nuevas.length, identicas, rutinasNuevas, conflictos };
+  return { registro: conflictos.length > 0 ? base : { ...base, entrenamientos: [...nuevas, ...base.entrenamientos], ...(base.rutinas || archivo.rutinas ? { rutinas } : {}), ...(base.bloques || archivo.bloques ? { bloques } : {}) }, nuevas: nuevas.length, identicas, rutinasNuevas, bloquesNuevos, conflictos };
 }

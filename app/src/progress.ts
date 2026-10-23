@@ -1,8 +1,19 @@
 import type { EjercicioPlan, Sesion } from './training';
+import { varianteDe } from './catalog';
 
 export function mismoEjercicio(s: Sesion, actual: Sesion, e: EjercicioPlan): boolean {
   const anterior = s.ejercicios.find(item => item.id === e.id);
-  return (s.rutinaOrigen?.id ?? null) === (actual.rutinaOrigen?.id ?? null) && anterior?.nombre.trim().toLocaleLowerCase('es-AR') === e.nombre.trim().toLocaleLowerCase('es-AR');
+  if (!anterior || (anterior.modalidad ?? "repeticiones") !== (e.modalidad ?? "repeticiones") || (anterior.varianteId ?? null) !== (e.varianteId ?? null)) return false;
+  if (anterior.equipoRef || e.equipoRef) {
+    if (anterior.equipoRef?.id !== e.equipoRef?.id) return false;
+  }
+  // Un aparato no identificado no demuestra equivalencia entre sesiones.
+  const tipo = varianteDe(e)?.equipo;
+  if (s.id !== actual.id && e.varianteId && !e.equipoRef && (!tipo || ['Máquina', 'Polea', 'Smith'].includes(tipo))) return false;
+  const equipoAnterior = anterior?.montaje?.equipo.trim().toLocaleLowerCase('es-AR') ?? '';
+  const equipoActual = e.montaje?.equipo.trim().toLocaleLowerCase('es-AR') ?? '';
+  if (!e.equipoRef && equipoAnterior !== equipoActual) return false;
+  return (s.rutinaOrigen?.id ?? null) === (actual.rutinaOrigen?.id ?? null) && (e.varianteId ? true : anterior.nombre.trim().toLocaleLowerCase('es-AR') === e.nombre.trim().toLocaleLowerCase('es-AR'));
 }
 
 export function sesionAnterior(sesiones: Sesion[], actual: Sesion, e: EjercicioPlan): Sesion | undefined {
@@ -10,5 +21,6 @@ export function sesionAnterior(sesiones: Sesion[], actual: Sesion, e: EjercicioP
 }
 
 export function criterioComparable(s: Sesion, e: EjercicioPlan): boolean {
-  return Boolean(e.criterioPeso && s.ejercicios.find(item => item.id === e.id)?.criterioPeso === e.criterioPeso);
+  const anterior=s.ejercicios.find(item=>item.id===e.id);
+  return Boolean(e.criterioPeso && anterior?.criterioPeso === e.criterioPeso && (anterior.criterioReps??null)===(e.criterioReps??null));
 }

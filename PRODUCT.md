@@ -22,20 +22,23 @@ La app debe recuperar el último entrenamiento y ejercicio utilizados. En una se
 
 ## Capabilities and Constraints
 
-- Código existente: React, TypeScript, Vite y vite-plugin-pwa; versión de interfaz actual 0.12.
-- Tres módulos: Entrenar, Historial y Configuración. Configuración contiene rutinas, respaldos, registro en otra fecha e instalación/actualización.
-- Guardado local inmediato por serie, con actualización de pantalla y avance después de una escritura exitosa. Sin backend, cuenta ni sincronización automática.
-- Una sesión por identidad de rutina y fecha; si ya existe, se continúa la misma. No se borran automáticamente duplicados históricos.
-- El objetivo del ejercicio y el resultado real son diferentes. Se avanza al completar la cantidad de series prevista, aunque no se alcancen las repeticiones objetivo.
-- Cada sesión conserva una copia de sus ejercicios y objetivos. Editar la rutina se aplica a sesiones futuras, sin reescribir el historial.
-- Editor para crear, ordenar y modificar rutinas. La referencia de Excel está precargada; no hay importador genérico de nuevas planillas.
-- Referencias visuales locales para la rutina original, series en filas con estados y vista compacta de ejercicios. Los ejercicios personalizados sin imagen reconocida utilizan una alternativa neutra.
-- Datos v3 en localStorage; respaldos JSON de sesiones y catálogo, con validación, vista previa y conflictos sin sobrescritura forzada.
-- Acceso offline después de preparar la app con conexión. Navegadores, perfiles y orígenes diferentes tienen almacenamiento separado.
-- Publicación gratuita en https://estebanroyo.github.io/proyecto-Gim/ mediante GitHub Pages y Actions. La URL local y la pública tienen almacenamiento separado.
-- Borrador de serie local por sesión y ejercicio, separado de la confirmación. Guardado y corrección en la ficha del ejercicio. Herramientas de prueba dentro de Configuración.
-- Criterio explícito de peso por ejercicio en sesiones futuras; los datos anteriores sin criterio no se reinterpretan. Historial con frecuencia semanal y comparación de repeticiones a la misma carga y criterio.
-- Se muestra volumen externo de entrenamiento. No inferir calorías fiables por serie a partir de peso y repeticiones ni inventar precisión o datos fisiológicos.
+- React, TypeScript, Vite y vite-plugin-pwa; versión local 0.20.1. Publicación de fuentes 0.20.1 mediante main y GitHub Actions.
+- Tres áreas: Entrenar, Historial y Configuración. Una acción principal para registrar; preparación y opciones avanzadas desplegables.
+- Guardado local antes de confirmar/avanzar, con borradores recuperables separados de resultados. Sin backend, cuenta ni sincronización automática.
+- Una sesión por rutina/fecha. Cada sesión copia ejercicios, objetivos, equipo y montaje. Editar plantillas o aceptar progresión solo cambia futuro.
+- Objetivos por serie, rangos, carga y descanso opcionales. Trabajo, calentamiento, intento fallido, pendiente y omitido tienen significado distinto. No se reinterpretan datos antiguos sin metadatos.
+- Descanso persistente por instante de fin, pausa/reanudar/omitir y excepciones por objetivo/ejercicio/ronda. Sin garantía de alarma con pantalla bloqueada.
+- Grupos ordenados de 2–6 ejercicios simples; posponer/retomar, reordenar, alternativas preparadas y versión corta elegida de antemano, sin borrar lo realizado.
+- Registro opcional por modalidad: peso/reps, lados separados, dropsets descendentes, tiempo y cardio manual. RIR 0–10 solo en series simples; asistencia separada. No se combinan técnicas automáticamente.
+- Biblioteca local de 35 variantes, búsqueda ES/EN, favoritos/recientes/alias personales, equipo concreto con identidad y montaje por ejercicio. Los 150 candidatos de investigación no son una meta de importación.
+- Bloques reutilizables, plan JSON portátil y CSV propio con vista previa, errores por fila y confirmación completa. No hay importación genérica de archivos Excel; la rutina original sigue precargada.
+- Escritura del registro v5 en la clave histórica única; lectura v1–v5, respaldo completo 3 con lectura 1/2/3. Copias previas locales al escribir sobre v3/v4, sin borrar fuentes ni completar datos desconocidos.
+- Respaldo completo conserva historial, rutinas personalizadas, bloques y notas. Plan portátil excluye historial, equipo concreto y alternativas; notas/montaje solo por elección explícita. Preferencias, borradores y temporizador no forman parte del respaldo.
+- Historial con conteos contextualizados, actividad temporal confirmada y comparaciones por variante/equipo/criterio compatibles. Progresión desactivada hasta elección del usuario; exige evidencia suficiente y aceptación para modificar objetivos futuros.
+- Offline después de preparar recursos con conexión. Navegador/perfil/origen distinto conserva otro registro. Almacenamiento local sujeto a cuota; no está coordinado transaccionalmente entre pestañas.
+- Referencias gráficas y fuentes locales; personalizados sin ilustración usan alternativa neutra. No se añaden recursos pesados para registrar.
+- Sin calorías fiables por serie, GPS, frecuencia cardiaca, diagnóstico ni medición de recuperación. kg/reps y segundos registrados no equivalen a precisión fisiológica.
+- E1–E8 implementados localmente, pendientes de validación de uso. E9 condicionado: no activar ciclos, medidas personales, discos, sesión libre completa o sincronización sin necesidad y contrato propios.
 
 ## Brand Commitments
 
@@ -58,3 +61,8 @@ Nombre actual: GIM · Bitácora. Interfaz y comunicación en español, con voseo
 5. Incorporar funciones por su utilidad durante el entrenamiento; evitar acumular las características de otras apps.
 
 - Preferencia confirmada durante v0.8: centrar el trabajo en comodidad de uso y claridad general, sin ampliar el alcance a funcionalidades específicas para discapacidades.
+
+
+Contrato actual, fuentes, límites y deuda: [entrega local 0.20](docs/entrega-0.20-ruta-principal.md). Continuidad exacta: [estado de desarrollo](docs/estado-desarrollo-gim.md). Las entregas anteriores conservan su evidencia por versión; compilación y revisión estática no validan uso móvil.
+
+Revisión local 0.20.1: limpieza recuperable de historial en Configuración, sin cambiar rutinas/bloques; no es borrado definitivo. Actualización visible, búsqueda manual, corrección y confirmación en registro avanzado, atajos de carga conservados con RIR/tramos. Alcance y operación real en docs/revision-plan-usabilidad-0.20.1.md; aceptación integral pendiente.

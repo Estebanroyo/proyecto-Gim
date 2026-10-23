@@ -29,3 +29,10 @@ El producto es una bitácora personal para usar durante un entrenamiento en el g
 - Mantener trabajo local. No publicar ni contratar servicios sin un pedido del usuario.
 - Conservar datos históricos, identificadores, objetivos copiados por sesión y compatibilidad de datos. No borrar almacenamiento del usuario para solucionar una actualización.
 - Documentar limitaciones reales: offline depende de preparación previa; el almacenamiento es por navegador/origen y todavía no hay sincronización automática.
+
+## Continuidad del desarrollo
+
+- Antes de planificar o continuar una funcionalidad, leer `docs/estado-desarrollo-gim.md` y la ficha correspondiente de `docs/hoja-de-ruta-gim.md`. La investigación base está en `docs/investigacion-gimnasio-2021-2026.md` y su catálogo complementario; no reconstruir el plan desde el chat.
+- Conservar IDs R00–R02, F01–F24 y las decisiones Dxx al registrar avances. Propuesta, implementado, compilado, validado en uso y publicado son estados distintos.
+- Al cerrar un corte, actualizar el estado con cambios reales, evidencia, decisiones pendientes y siguiente acción exacta. No marcar funcionalidad como existente por figurar en la hoja de ruta.
+- La planificación documental no autoriza por sí sola implementar todo el backlog ni publicarlo. Las instrucciones posteriores del usuario prevalecen sobre el plan.

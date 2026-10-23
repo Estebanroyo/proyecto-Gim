@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 type InstallEvent = Event & {
@@ -6,12 +6,15 @@ type InstallEvent = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 };
 
-export default function PwaControls({ onActualizacion }: { onActualizacion?: (disponible: boolean) => void }) {
+export default function PwaControls({ onActualizacion, bloqueado = false }: { onActualizacion?: (disponible: boolean) => void; bloqueado?: boolean }) {
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null);
   const [installError, setInstallError] = useState('');
   const [swError, setSwError] = useState('');
   const [prepared, setPrepared] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
+  const [comprobando, setComprobando] = useState(false);
+  const [estadoConsulta, setEstadoConsulta] = useState('');
+  const ultimoChequeo = useRef(0);
   const {
     offlineReady: [offlineReady],
     needRefresh: [needRefresh],
@@ -28,6 +31,30 @@ export default function PwaControls({ onActualizacion }: { onActualizacion?: (di
   useEffect(() => {
     onActualizacion?.(needRefresh);
   }, [needRefresh, onActualizacion]);
+
+  useEffect(() => {
+    const comprobar = () => {
+      if (!navigator.onLine || !('serviceWorker' in navigator) || Date.now() - ultimoChequeo.current < 60_000) return;
+      ultimoChequeo.current = Date.now();
+      void navigator.serviceWorker.getRegistration().then(r => r?.update()).catch(() => { /* Una revisión manual informa el error; volver a foco no interrumpe el entrenamiento. */ });
+    };
+    window.addEventListener('focus', comprobar);
+    window.addEventListener('online', comprobar);
+    return () => { window.removeEventListener('focus', comprobar); window.removeEventListener('online', comprobar); };
+  }, []);
+
+  async function buscarActualizacion() {
+    setComprobando(true); setSwError(''); setEstadoConsulta('');
+    try {
+      if (!navigator.onLine || !('serviceWorker' in navigator)) throw new Error('Buscá actualizaciones con conexión y una versión de producción preparada.');
+      const registro = await navigator.serviceWorker.getRegistration();
+      if (!registro) throw new Error('Todavía no se registró la interfaz offline. Volvé a abrir esta versión con conexión.');
+      await registro.update();
+      ultimoChequeo.current = Date.now();
+      setEstadoConsulta('Consulta realizada. Si termina de prepararse una versión nueva, aparecerá la opción para aplicarla.');
+    } catch (e) { setSwError(e instanceof Error ? e.message : 'No se pudo buscar la actualización. Intentá de nuevo con conexión.'); }
+    finally { setComprobando(false); }
+  }
 
   useEffect(() => {
     // Una recarga offline ya puede estar controlada aunque el callback de
@@ -71,7 +98,7 @@ export default function PwaControls({ onActualizacion }: { onActualizacion?: (di
   }
 
   return (
-    <aside className="pwa-panel" aria-label="Instalación y conexión">
+    <aside className="pwa-panel" id="instalacion-conexion" aria-label="Instalación y conexión">
       <div className="pwa-top">
         <span className={`connection ${online ? '' : 'is-offline'}`}>
           <span className="connection-dot" aria-hidden="true" /> {online ? 'Red disponible' : 'Sin conexión'}
@@ -80,10 +107,13 @@ export default function PwaControls({ onActualizacion }: { onActualizacion?: (di
       </div>
       <p>{offlineReady || prepared ? 'Interfaz preparada para abrir sin conexión en este navegador.' : 'La preparación offline se completa al cargar la versión de producción con conexión.'}</p>
       <p className="muted">La instalación depende del navegador. Si está disponible, también podés usar su menú para instalar o agregar al inicio.</p>
+      <button className="button secondary small" type="button" disabled={comprobando || !online} onClick={() => void buscarActualizacion()}>{comprobando ? 'Buscando…' : 'Buscar actualizaciones'}</button>
+      {estadoConsulta && <p className="muted" role="status">{estadoConsulta}</p>}
       {needRefresh && (
         <div className="update-notice">
           <p>Hay una versión nueva. Aplicarla recarga la pantalla; terminá de registrar la serie antes.</p>
-          <button className="button small" onClick={() => { void updateServiceWorker(true).catch(() => setSwError('No se pudo aplicar la actualización. Intentá de nuevo con conexión.')); }}>Aplicar actualización</button>
+          <button className="button small" disabled={bloqueado} onClick={() => { void updateServiceWorker(true).catch(() => setSwError('No se pudo aplicar la actualización. Intentá de nuevo con conexión.')); }}>Aplicar actualización</button>
+          {bloqueado && <p>Guardá o cancelá la edición antes de actualizar.</p>}
         </div>
       )}
       {(installError || swError) && <p role="alert">{installError || swError}</p>}

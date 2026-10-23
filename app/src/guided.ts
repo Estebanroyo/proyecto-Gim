@@ -1,19 +1,21 @@
 import { validarRutinas } from './training.ts';
 import type { EjercicioPlan, RegistroActual, RutinaDia, Sesion } from './training';
 import { criterioComparable, mismoEjercicio } from './progress.ts';
+import { esSimple, pendiente, turnoSiguiente } from './execution';
+import { objetivoActual } from './prescription';
 
 export function ejercicioPendiente(sesion: Sesion): EjercicioPlan | undefined {
-  return sesion.ejercicios.find(e => e.seriesObjetivo === null || sesion.series.filter(s => s.ejercicioId === e.id).length < e.seriesObjetivo);
+  return turnoSiguiente(sesion);
 }
-
 export function siguienteEjercicio(sesion: Sesion, actualId: string): EjercicioPlan | undefined {
-  const indice = sesion.ejercicios.findIndex(e => e.id === actualId);
-  const orden = [...sesion.ejercicios.slice(indice + 1), ...sesion.ejercicios.slice(0, indice)];
-  return orden.find(e => e.seriesObjetivo === null || sesion.series.filter(s => s.ejercicioId === e.id).length < e.seriesObjetivo);
+  return turnoSiguiente(sesion, actualId);
 }
-
+export function hayPendientes(sesion: Sesion): boolean { return sesion.ejercicios.some(e=>pendiente(sesion,e)); }
 export function sugerirPeso(registro: RegistroActual, sesion: Sesion, ejercicioId: string): { pesoKg: number; origen: string } {
-  const propias = sesion.series.filter(s => s.ejercicioId === ejercicioId);
+  const ejercicioActual = sesion.ejercicios.find(e => e.id === ejercicioId);
+  const objetivo = ejercicioActual ? objetivoActual(sesion, ejercicioActual) : undefined;
+  if (objetivo?.pesoKg !== undefined) return { pesoKg: objetivo.pesoKg, origen: 'Objetivo de carga de esta serie' };
+  const propias = sesion.series.filter(s => s.ejercicioId === ejercicioId).filter(esSimple).filter(s => s.estado !== 'fallida');
   if (propias.length) return { pesoKg: propias.at(-1)!.pesoKg, origen: 'Última serie de este entrenamiento' };
   // Fecha de entrenamiento, no fecha de importación. Nunca usar una sesión futura.
   const anteriores = registro.entrenamientos.filter(s => s.id !== sesion.id && s.fecha && sesion.fecha && s.fecha < sesion.fecha &&
@@ -22,7 +24,7 @@ export function sugerirPeso(registro: RegistroActual, sesion: Sesion, ejercicioI
   for (const anterior of anteriores) {
     const ejercicio = sesion.ejercicios.find(e => e.id === ejercicioId);
     if (!ejercicio || !mismoEjercicio(anterior, sesion, ejercicio) || (ejercicio.criterioPeso && !criterioComparable(anterior, ejercicio))) continue;
-    const primera = anterior.series.find(s => s.ejercicioId === ejercicioId);
+    const primera = anterior.series.filter(esSimple).find(s => s.ejercicioId === ejercicioId && s.estado !== 'fallida');
     if (primera) return { pesoKg: primera.pesoKg, origen: `Primera serie del ${anterior.fecha}` };
   }
   return { pesoKg: 0, origen: 'Sin referencia anterior; ajustá tu carga' };
@@ -36,7 +38,10 @@ export function sumarPeso(valor: string, incremento: number): string {
 
 export function finalizarSesion(registro: RegistroActual, id: string, instante: string): RegistroActual {
   const sesion = registro.entrenamientos.find(s => s.id === id);
-  if (!sesion?.fecha || !sesion.series.length || !Number.isFinite(Date.parse(instante))) throw new Error('Registrá al menos una serie antes de finalizar.');
+  if (!sesion?.fecha) throw new Error('Elegí una sesión con fecha.');
+  if (sesion.series.some(s=>s.cerrada===false)) throw new Error('Cerrá las series de lados o dropset que siguen abiertas antes de finalizar.');
+  if (!sesion.series.length && !sesion.omisiones?.length) throw new Error('Registrá un resultado u omití explícitamente lo pendiente antes de finalizar.');
+  if (!Number.isFinite(Date.parse(instante))) throw new Error('La fecha de finalización no es válida.');
   return { ...registro, entrenamientos: registro.entrenamientos.map(s => s.id === id ? { ...s, finalizadaEn: instante } : s) };
 }
 
@@ -54,7 +59,7 @@ export function reiniciarSesion(registro: RegistroActual, id: string): RegistroA
   return { ...registro, entrenamientos: registro.entrenamientos.map(s => {
     if (s.id !== id) return s;
     const { finalizadaEn: _, ...abierta } = s;
-    return { ...abierta, series: [] };
+    return { ...abierta, series: [], pospuestos: [] };
   }) };
 }
 
